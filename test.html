@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Deep Learning Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4A90E2; /* Xanh dương chủ đạo */
+            --primary-dark: #357ABD;
+            --secondary-color: #50E3C2; /* Xanh ngọc cho accent */
+            --background-light: #f7f9fc;
+            --background-dark: #2c3e50; /* Dark mode background */
+            --text-light: #f5f6fa; /* Sáng hơn cho dark mode */
+            --text-dark: #333333;
+            --text-dark-secondary: #555555;
+            --card-background-light: #ffffff;
+            --card-background-dark: #34495e; /* Dark mode card */
+            --border-color-light: #e0e0e0;
+            --border-color-dark: #4a627a;
+            --correct-color: #2ecc71; /* Xanh lá cho đáp án đúng */
+            --incorrect-color: #e74c3c; /* Đỏ cho đáp án sai */
+            --font-family: 'Montserrat', sans-serif;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --text-on-secondary-dark: #253342; /* Màu chữ tối trên nền secondary ở dark mode */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            line-height: 1.6;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            display: flex;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-wrapper {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Thanh điều hướng câu hỏi (Sidebar) --- */
+        .question-sidebar {
+            width: 280px;
+            background-color: var(--card-background-light);
+            border-right: 1px solid var(--border-color-light);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, border-color 0.3s, left 0.3s ease-in-out;
+            position: fixed;
+            left: -280px;
+            top: 0;
+            height: 100%;
+            z-index: 1000;
+        }
+        .question-sidebar.open {
+            left: 0;
+        }
+
+
+        .sidebar-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .sidebar-header h2 {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .sidebar-progress {
+            font-size: 0.9em;
+            color: var(--text-dark-secondary);
+        }
+
+        .sidebar-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .sidebar-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: var(--border-radius);
+        }
+        .sidebar-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: var(--border-radius);
+        }
+        .sidebar-list::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+
+        .question-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+            border: 1px solid transparent;
+            border-left: 4px solid transparent; /* Default border */
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+            font-weight: 500;
+        }
+        .question-nav-item:hover:not(.current) {
+            background-color: #e9eff5;
+        }
+        .question-nav-item.current {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            font-weight: 600;
+            border-left-color: var(--primary-dark);
+        }
+        .question-nav-item.answered-correct {
+            border-left-color: var(--correct-color);
+            background-color: #e8f5e9; /* Light green */
+        }
+        .question-nav-item.answered-incorrect {
+            border-left-color: var(--incorrect-color);
+            background-color: #ffebee; /* Light red */
+        }
+        /* Ensure current overrides answered styles for background/text color */
+        .question-nav-item.answered-correct.current,
+        .question-nav-item.answered-incorrect.current {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-left-color: var(--primary-dark); /* Or keep specific color if needed */
+        }
+
+
+        .nav-item-number {
+            margin-right: 10px;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: right;
+        }
+        .nav-item-flag {
+            margin-left: auto;
+            font-size: 0.8em;
+        }
+        .nav-item-flag.flagged {
+            color: var(--incorrect-color);
+        }
+
+        .sidebar-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-icon {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--text-dark-secondary);
+            transition: color 0.2s;
+        }
+        .btn-icon:hover {
+            color: var(--primary-color);
+        }
+        .btn-sidebar-action {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-sidebar-action:hover {
+            background-color: var(--primary-dark);
+        }
+
+        #openSidebarBtn {
+            position: fixed;
+            left: 15px;
+            top: 15px;
+            z-index: 1001;
+            display: block;
+            padding: 10px 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.2em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+         @media (min-width: 901px) {
+            #openSidebarBtn {
+                display: none;
+            }
+            .question-sidebar {
+                position: relative;
+                left: 0;
+            }
+        }
+
+
+        /* --- Nội dung Quiz chính --- */
+        .quiz-main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: var(--background-light);
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-header h1 {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        .progress-bar-container {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            transition: width 0.4s ease-in-out;
+        }
+
+        .quiz-area {
+            background-color: var(--card-background-light);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .quiz-card-top-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color-light);
+        }
+        .timer-display { /* Sẽ ẩn đi bằng JS */
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .timer-icon {
+            margin-right: 5px;
+        }
+        .difficulty-display {
+            font-size: 0.9em;
+            color: var(--text-dark-secondary);
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+        }
+
+        .question-content h2 {
+            font-size: 1.4em;
+            margin-bottom: 25px;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option {
+            background-color: #f9f9f9;
+            border: 2px solid var(--border-color-light);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+            text-align: left;
+            width: 100%;
+        }
+        .option:hover:not(.disabled) {
+            border-color: var(--primary-color);
+            background-color: #e9f3ff;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            background-color: #f0f0f0;
+            border-color: #e0e0e0;
+            color: #aaa;
+            opacity: 0.7;
+        }
+
+        .option.correct {
+            border-color: var(--correct-color) !important;
+            background-color: var(--correct-color) !important;
+            color: var(--text-light) !important;
+            opacity: 1 !important;
+        }
+        .option.incorrect {
+            border-color: var(--incorrect-color) !important;
+            background-color: var(--incorrect-color) !important;
+            color: var(--text-light) !important;
+            opacity: 1 !important;
+        }
+
+        .explanation-container {
+            background-color: #e9f3ff;
+            border: 1px solid #d2e3fc;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-top: 25px;
+            color: #3a506b;
+        }
+        .explanation-container h3 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .explanation-container p {
+            line-height: 1.7;
+        }
+        .feedback-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #d2e3fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feedback-section span {
+            font-size: 0.9em;
+            color: var(--text-dark-secondary);
+        }
+        .feedback-btn {
+            padding: 6px 12px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: opacity 0.2s;
+        }
+        .feedback-btn:hover {
+            opacity: 0.8;
+        }
+        .feedback-btn[data-feedback="positive"] { background-color: var(--correct-color); color: white;}
+        .feedback-btn[data-feedback="negative"] { background-color: var(--incorrect-color); color: white;}
+
+
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color-light);
+        }
+        .btn {
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .btn.btn-secondary {
+            background-color: #e0e0e0;
+            color: var(--text-dark-secondary);
+        }
+        .btn.btn-secondary:hover:not(:disabled) {
+            background-color: #d0d0d0;
+        }
+        .btn.btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+        .btn.btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+        }
+        .btn.btn-action {
+            background-color: #f0f0f0;
+            color: var(--text-dark-secondary);
+            border: 1px solid var(--border-color-light);
+        }
+        .btn.btn-action:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+        .btn.btn-action .flag-icon.flagged {
+            color: var(--incorrect-color);
+        }
+         .btn.btn-action .flag-icon:not(.flagged) {
+            color: var(--text-dark-secondary);
+        }
+        .btn:disabled {
+            background-color: #f0f0f0 !important;
+            color: #aaa !important;
+            cursor: not-allowed;
+        }
+
+
+        /* --- Khu vực kết quả --- */
+        .result-area {
+            text-align: center;
+            padding: 40px;
+            background-color: var(--card-background-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 600px;
+            margin: 50px auto;
+        }
+        .result-summary h2 {
+            font-size: 2em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .final-score-display {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .result-area p {
+            font-size: 1.1em;
+            color: var(--text-dark-secondary);
+            margin-bottom: 30px;
+        }
+
+        .result-actions .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+        }
+        .flagged-questions-review {
+            margin-top: 30px;
+            text-align: left;
+        }
+        .flagged-questions-review h3 {
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+        #flaggedList {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #flaggedList li {
+            padding: 8px 5px;
+            border-bottom: 1px dashed var(--border-color-light);
+            cursor: pointer;
+            color: var(--primary-color);
+            transition: color 0.2s, background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 3px;
+        }
+        #flaggedList li:hover {
+            color: var(--primary-dark);
+            background-color: #e9eff5;
+        }
+        #flaggedList li:last-child {
+            border-bottom: none;
+        }
+
+        /* Dark Mode Specifics */
+        body.dark-mode {
+            background-color: var(--background-dark);
+            color: var(--text-light);
+        }
+        body.dark-mode .question-sidebar {
+            background-color: var(--card-background-dark);
+            border-right-color: var(--border-color-dark);
+        }
+        body.dark-mode .sidebar-header h2 { color: var(--secondary-color); }
+        body.dark-mode .sidebar-progress,
+        body.dark-mode .btn-icon,
+        body.dark-mode .difficulty-display { color: #bdc3c7; }
+        body.dark-mode .difficulty-display { background-color: #2c3e50;}
+
+        body.dark-mode .question-nav-item { color: var(--text-light); border-left-color: transparent;}
+        body.dark-mode .question-nav-item:hover:not(.current) { background-color: #3e5771; }
+        body.dark-mode .question-nav-item.current {
+            background-color: var(--secondary-color);
+            color: var(--text-on-secondary-dark);
+            border-left-color: #45B8A0; /* Darker shade of secondary for border */
+        }
+        body.dark-mode .question-nav-item.answered-correct {
+            border-left-color: var(--correct-color);
+            background-color: #304034; /* Dark green */
+        }
+        body.dark-mode .question-nav-item.answered-incorrect {
+            border-left-color: var(--incorrect-color);
+            background-color: #4a3234; /* Dark red */
+        }
+        body.dark-mode .question-nav-item.answered-correct.current,
+        body.dark-mode .question-nav-item.answered-incorrect.current {
+            background-color: var(--secondary-color);
+            color: var(--text-on-secondary-dark);
+            border-left-color: #45B8A0;
+        }
+
+        body.dark-mode .sidebar-list::-webkit-scrollbar-track { background: #2c3e50; }
+        body.dark-mode .sidebar-list::-webkit-scrollbar-thumb { background: #555; }
+        body.dark-mode .sidebar-list::-webkit-scrollbar-thumb:hover { background: #777; }
+
+
+        body.dark-mode .sidebar-footer { border-top-color: var(--border-color-dark); }
+        body.dark-mode .btn-sidebar-action {
+            background-color: var(--secondary-color);
+            color: var(--text-on-secondary-dark);
+        }
+        body.dark-mode .btn-sidebar-action:hover { background-color: #45B8A0; } /* Darker secondary */
+
+
+        body.dark-mode .quiz-main-content { background-color: var(--background-dark); }
+        body.dark-mode .quiz-header h1 { color: var(--text-light); }
+        body.dark-mode .progress-bar-container { background-color: #3e5771; }
+        body.dark-mode .progress-bar-fill { background-color: var(--primary-color); }
+
+        body.dark-mode .quiz-area, body.dark-mode .result-area {
+            background-color: var(--card-background-dark);
+            border: 1px solid var(--border-color-dark);
+        }
+        body.dark-mode .quiz-card-top-info { border-bottom-color: var(--border-color-dark); }
+        body.dark-mode .timer-display { color: var(--secondary-color); }
+
+        body.dark-mode .question-content h2 { color: var(--text-light); }
+
+        body.dark-mode .option {
+            background-color: #3e5771;
+            border-color: var(--border-color-dark);
+            color: var(--text-light);
+        }
+        body.dark-mode .option:hover:not(.disabled) {
+            border-color: var(--secondary-color);
+            background-color: #4a627a;
+        }
+
+        body.dark-mode .option.disabled {
+            background-color: #2c3e50 !important;
+            opacity: 0.5;
+            border-color: #3e5771 !important;
+            color: #788ca0 !important;
+        }
+        /* .correct and .incorrect already have !important */
+
+        body.dark-mode .explanation-container {
+            background-color: #293a4a;
+            border-color: #3e5771;
+            color: #bdc3c7;
+        }
+        body.dark-mode .explanation-container h3 { color: var(--secondary-color); }
+        body.dark-mode .feedback-section { border-top-color: #3e5771; }
+        body.dark-mode .feedback-section span { color: #bdc3c7; }
+
+        body.dark-mode .quiz-controls { border-top-color: var(--border-color-dark); }
+        body.dark-mode .btn.btn-secondary {
+            background-color: #3e5771;
+            color: #bdc3c7;
+        }
+        body.dark-mode .btn.btn-secondary:hover:not(:disabled) { background-color: #4a627a; }
+        body.dark-mode .btn.btn-primary {
+            background-color: var(--secondary-color);
+            color: var(--text-on-secondary-dark);
+        }
+        body.dark-mode .btn.btn-primary:hover:not(:disabled) { background-color: #45B8A0; } /* Darker secondary */
+        body.dark-mode .btn.btn-action {
+            background-color: #3e5771;
+            color: #bdc3c7;
+            border-color: var(--border-color-dark);
+        }
+        body.dark-mode .btn.btn-action:hover:not(:disabled) { background-color: #4a627a; }
+        body.dark-mode .btn:disabled {
+            background-color: #2c3e50 !important;
+            color: #566573 !important;
+        }
+        body.dark-mode .result-summary h2 { color: var(--secondary-color); }
+        body.dark-mode .flagged-questions-review h3 { color: var(--secondary-color); }
+        body.dark-mode #flaggedList li {
+            border-bottom-color: var(--border-color-dark);
+            color: var(--secondary-color);
+        }
+        body.dark-mode #flaggedList li:hover { color: #A3E4D7; background-color: #3e5771;}
+
+        @media (max-width: 600px) {
+            .app-wrapper { flex-direction: column; }
+            .question-sidebar {
+                width: 100%;
+                height: 50vh;
+                left: 0;
+                top: -100vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color-light);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            .question-sidebar.open {
+                top: 0;
+            }
+            #openSidebarBtn {
+                 top: 10px; left: 10px;
+            }
+
+            .quiz-main-content { padding: 15px; }
+            .quiz-area { padding: 20px; }
+            .quiz-card-top-info { flex-direction: column; gap: 10px; align-items: flex-start;}
+            .question-content h2 { font-size: 1.2em; }
+            .option { padding: 12px; }
+            .quiz-controls { flex-direction: column; gap: 10px; }
+            .quiz-controls .btn { width: 100%; }
+            .result-actions { flex-direction: column; gap: 10px; }
+            .result-actions .btn { width: 100%; }
+        }
+        #toast-notification {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, bottom 0.3s ease-in-out;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-weight: 500;
+        }
+        #toast-notification.show {
+            bottom: 30px;
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <nav class="question-sidebar" id="questionSidebar">
+            <div class="sidebar-header">
+                <h2>Câu hỏi</h2>
+                <div class="sidebar-progress">
+                    <span id="answeredCountDisplay">0</span>/<span id="totalSidebarQuestionsDisplay">0</span>
+                </div>
+            </div>
+            <div class="sidebar-list" id="questionNavList">
+            </div>
+            <div class="sidebar-footer">
+                <button id="toggleDarkModeBtn" class="btn-icon" title="Chế độ Sáng/Tối">🌓</button>
+                 <button id="saveProgressBtnSidebar" class="btn-sidebar-action" title="Lưu tiến độ hiện tại">Lưu Bài</button>
+                <button id="restartQuizBtnSidebar" class="btn-sidebar-action" title="Làm lại bài từ đầu">Làm Lại</button>
+            </div>
+        </nav>
+
+        <button id="openSidebarBtn" title="Mở danh sách câu hỏi">☰</button>
+
+        <main class="quiz-main-content" id="quizMainContent">
+            <header class="quiz-header">
+                <h1>Trắc Nghiệm Deep Learning Chuyên Sâu</h1>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="mainProgressBar"></div>
+                </div>
+            </header>
+
+            <section class="quiz-area" id="quizAreaEl">
+                <div class="quiz-card-top-info">
+                    <div class="timer-display" id="timerDisplay" style="display: none;">
+                        <span class="timer-icon">⏱️</span> Thời gian: <span id="timeLeftDisplay"></span>
+                    </div>
+                    <div class="difficulty-display" id="difficultyDisplayEl">Độ khó: Medium</div>
+                </div>
+
+                <div class="question-content">
+                    <h2 id="questionTextEl">Câu hỏi sẽ hiển thị ở đây...</h2>
+                </div>
+
+                <div class="options-container" id="optionsContainerEl">
+                </div>
+
+                <div class="explanation-container" id="explanationContainerEl" style="display: none;">
+                    <h3>Giải thích chi tiết:</h3>
+                    <p id="explanationTextEl"></p>
+                    <div class="feedback-section">
+                        <span>Nội dung này có hữu ích?</span>
+                        <button class="feedback-btn" data-feedback="positive">👍 Có</button>
+                        <button class="feedback-btn" data-feedback="negative">👎 Không</button>
+                    </div>
+                </div>
+
+                <div class="quiz-controls">
+                    <button class="btn btn-secondary" id="prevQuestionBtnEl" disabled> < Lùi</button>
+                    <button class="btn btn-action" id="flagQuestionBtnEl">
+                        <span class="flag-icon" id="flagIconControlEl">🏳️</span><span id="flagBtnTextEl">Đánh dấu</span>
+                    </button>
+                    <button class="btn btn-primary" id="nextQuestionBtnEl">Tiếp ></button>
+                </div>
+            </section>
+
+            <section class="result-area" id="resultAreaEl" style="display: none;">
+                <div class="result-summary">
+                    <h2>Chúc mừng bạn đã hoàn thành!</h2>
+                    <div class="final-score-display">
+                        Điểm số: <span id="finalScoreDisplay">0</span>/<span id="totalResultQuestionsDisplay">0</span> (<span id="finalPercentageDisplay">0</span>%)
+                    </div>
+                    <p id="resultMessageEl">Hãy cố gắng hơn ở lần sau nhé!</p>
+                    <div class="result-actions">
+                        <button class="btn btn-primary" id="restartQuizBtnResultEl">Làm Lại Từ Đầu</button>
+                        <button class="btn btn-secondary" id="reviewAnswersBtnEl">Xem Lại Bài Làm</button>
+                    </div>
+                </div>
+                 <div class="flagged-questions-review" id="flaggedQuestionsReviewAreaEl" style="display:none;">
+                    <h3>Câu hỏi đã đánh dấu cần xem lại:</h3>
+                    <ul id="flaggedListEl"></ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        // ===================================================================================
+        // == BẠN HÃY DÁN MẢNG 60 CÂU HỎI ĐẦY ĐỦ CỦA MÌNH VÀO ĐÂY THAY CHO MẢNG MẪU NÀY ==
+        // ===================================================================================
+        const questions = [
+    // --- EASY (10 câu) ---
+    {
+        question: "GAN là viết tắt của cụm từ nào?",
+        options: ["A) General Adversarial Networks", "B) Generative Adversarial Networks", "C) Gradient Ascent Networks", "D) Generated Autoencoder Networks"],
+        correct: 1,
+        explanation: "GAN là viết tắt của Generative Adversarial Networks, một lớp các mô hình học máy được giới thiệu bởi Ian Goodfellow và cộng sự vào năm 2014.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Trong kiến trúc GAN cơ bản, có bao nhiêu mạng nơ-ron chính?",
+        options: ["A) Một", "B) Hai", "C) Ba", "D) Bốn"],
+        correct: 1,
+        explanation: "GAN cơ bản bao gồm hai mạng nơ-ron chính: Generator (bộ sinh) và Discriminator (bộ phân biệt), chúng 'cạnh tranh' với nhau trong quá trình huấn luyện.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Mục tiêu của Generator trong GAN là gì?",
+        options: ["A) Phân biệt dữ liệu thật và giả", "B) Tạo ra dữ liệu giả trông giống hệt dữ liệu thật", "C) Tính toán hàm mất mát", "D) Tối ưu hóa Discriminator"],
+        correct: 1,
+        explanation: "Generator cố gắng học cách tạo ra các mẫu dữ liệu mới (giả) sao cho chúng không thể phân biệt được với các mẫu dữ liệu thật bởi Discriminator.",
+        difficulty: "Easy"
+    },
+    {
+        question: "YOLO là viết tắt của cụm từ nào trong lĩnh vực phát hiện đối tượng?",
+        options: ["A) You Only Learn Once", "B) You Only Look Once", "C) Your Object Learning Observer", "D) Yielding Optimal Location Outputs"],
+        correct: 1,
+        explanation: "YOLO là viết tắt của You Only Look Once, một thuật toán phát hiện đối tượng nổi tiếng về tốc độ và hiệu quả.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Đặc điểm nổi bật của YOLO so với các bộ phát hiện đối tượng hai giai đoạn (two-stage detectors) là gì?",
+        options: ["A) Độ chính xác luôn cao hơn", "B) Tốc độ phát hiện nhanh hơn vì xử lý ảnh trong một lượt duy nhất", "C) Yêu cầu ít dữ liệu huấn luyện hơn", "D) Chỉ phát hiện được một đối tượng trong ảnh"],
+        correct: 1,
+        explanation: "YOLO là một bộ phát hiện một giai đoạn (one-stage), nó thực hiện dự đoán bounding box và lớp trực tiếp từ toàn bộ ảnh trong một lần truyền, giúp đạt tốc độ rất nhanh.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Bounding box trong phát hiện đối tượng thường được biểu diễn bằng thông tin gì?",
+        options: ["A) Chỉ tên lớp của đối tượng", "B) Tọa độ tâm, chiều rộng, chiều cao (hoặc tọa độ góc trên trái và dưới phải)", "C) Một vector đặc trưng của đối tượng", "D) Độ sâu của đối tượng trong ảnh 3D"],
+        correct: 1,
+        explanation: "Một bounding box xác định vị trí và kích thước của đối tượng, thường được biểu diễn bằng tọa độ (x, y) của tâm, chiều rộng (w), chiều cao (h), hoặc tọa độ (xmin, ymin, xmax, ymax) của hai góc đối diện.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Trong GAN, nếu Discriminator trở nên quá 'giỏi' quá sớm, điều gì có thể xảy ra?",
+        options: ["A) Generator sẽ học nhanh hơn", "B) Quá trình huấn luyện sẽ ổn định hơn", "C) Generator có thể không học được gì (vanishing gradients)", "D) GAN sẽ tạo ra ảnh chất lượng siêu cao ngay lập tức"],
+        correct: 2,
+        explanation: "Nếu Discriminator quá giỏi và dễ dàng phân biệt thật/giả, gradient truyền về Generator sẽ rất nhỏ hoặc bằng không, khiến Generator không nhận được tín hiệu để cải thiện (vanishing gradients).",
+        difficulty: "Easy"
+    },
+    {
+        question: "Anchor boxes trong YOLO được sử dụng để làm gì?",
+        options: ["A) Để tăng cường độ sáng của ảnh", "B) Làm các hộp tham chiếu (prior boxes) với các tỷ lệ và kích thước khác nhau để dự đoán bounding box tốt hơn", "C) Để lưu trữ các đối tượng đã phát hiện", "D) Để chuẩn hóa kích thước ảnh đầu vào"],
+        correct: 1,
+        explanation: "Anchor boxes là các hộp được định nghĩa trước với các hình dạng và kích thước khác nhau. YOLO dự đoán độ lệch so với các anchor box này thay vì dự đoán trực tiếp tọa độ bounding box từ đầu.",
+        difficulty: "Easy"
+    },
+     {
+        question: "Hàm mất mát (loss function) nào KHÔNG phổ biến trong huấn luyện GAN?",
+        options: ["A) Binary Cross-Entropy", "B) Wasserstein Loss", "C) Mean Squared Error (MSE)", "D) Minimax Loss"],
+        correct: 2,
+        explanation: "MSE thường dùng cho các bài toán hồi quy. GAN thường dùng các biến thể của Cross-Entropy (trong Minimax loss của GAN gốc) hoặc Wasserstein Loss (trong WGAN) để đo sự khác biệt giữa phân phối dữ liệu thật và giả.",
+        difficulty: "Easy"
+    },
+    {
+        question: "Thành phần nào trong YOLO chịu trách nhiệm chính cho việc trích xuất các đặc trưng từ ảnh đầu vào?",
+        options: ["A) Head", "B) Neck", "C) Backbone", "D) Non-Maximum Suppression"],
+        correct: 2,
+        explanation: "Backbone thường là một mạng CNN mạnh (ví dụ: DarkNet, ResNet) có nhiệm vụ học và trích xuất các đặc trưng hình ảnh từ cấp thấp đến cấp cao.",
+        difficulty: "Easy"
+    },
+
+    // --- MEDIUM (20 câu) ---
+    {
+        question: "Trong kiến trúc GAN, Discriminator thường được huấn luyện để tối đa hóa điều gì?",
+        options: ["A) Khả năng tạo ra dữ liệu giả", "B) Sai số khi phân loại dữ liệu thật là thật", "C) Khả năng phân biệt chính xác giữa dữ liệu thật và dữ liệu giả", "D) Sự tương đồng giữa dữ liệu thật và dữ liệu giả"],
+        correct: 2,
+        explanation: "Discriminator được huấn luyện để phân loại chính xác: gán nhãn 'thật' cho dữ liệu thật và 'giả' cho dữ liệu do Generator tạo ra. Nó cố gắng tối đa hóa độ chính xác phân loại này.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Hiện tượng 'mode collapse' trong GAN là gì?",
+        options: ["A) Generator tạo ra nhiều loại dữ liệu khác nhau nhưng chất lượng thấp", "B) Discriminator không thể phân biệt được thật giả", "C) Generator chỉ tạo ra một số ít các mẫu lặp đi lặp lại, thiếu sự đa dạng", "D) Cả Generator và Discriminator đều ngừng học"],
+        correct: 2,
+        explanation: "Mode collapse xảy ra khi Generator chỉ học được cách tạo ra một vài 'mode' (kiểu) dữ liệu hạn chế mà có thể đánh lừa Discriminator, dẫn đến các mẫu sinh ra thiếu sự đa dạng và không bao quát được toàn bộ phân phối dữ liệu thật.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Kiến trúc DCGAN (Deep Convolutional GAN) có đặc điểm nổi bật nào so với GAN gốc?",
+        options: ["A) Sử dụng các lớp Fully Connected thay vì Convolutional", "B) Loại bỏ hoàn toàn Discriminator", "C) Sử dụng các lớp Convolutional trong cả Generator và Discriminator, không có lớp Pooling/Unpooling rõ ràng (thay bằng strided convolutions và transpose convolutions)", "D) Chỉ hoạt động với dữ liệu văn bản"],
+        correct: 2,
+        explanation: "DCGAN giới thiệu một số hướng dẫn kiến trúc để huấn luyện GAN ổn định hơn, bao gồm việc sử dụng các lớp tích chập có sải bước (strided convolutions) trong Discriminator để giảm chiều và các lớp tích chập chuyển vị (transpose convolutions) trong Generator để tăng chiều, thay thế các lớp pooling/unpooling.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Trong YOLO, đầu ra của mạng thường là một tensor 3D (Grid x Grid x Channels). Mỗi ô lưới (grid cell) chịu trách nhiệm dự đoán điều gì?",
+        options: ["A) Toàn bộ các đối tượng trong ảnh", "B) Chỉ các đối tượng có tâm rơi vào ô lưới đó", "C) Chỉ loại của đối tượng", "D) Chỉ một pixel duy nhất của đối tượng"],
+        correct: 1,
+        explanation: "Ảnh đầu vào được chia thành một lưới SxS. Nếu tâm của một đối tượng rơi vào một ô lưới nào đó, ô lưới đó sẽ chịu trách nhiệm phát hiện đối tượng đó, bao gồm dự đoán bounding box, điểm tin cậy và xác suất lớp.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Intersection over Union (IoU) trong phát hiện đối tượng được tính như thế nào?",
+        options: ["A) Tổng diện tích của hộp dự đoán và hộp thực tế", "B) Diện tích phần giao chia cho diện tích phần hợp của hộp dự đoán và hộp thực tế", "C) Tỷ lệ giữa chiều rộng và chiều cao của hộp dự đoán", "D) Khoảng cách Euclidean giữa tâm của hai hộp"],
+        correct: 1,
+        explanation: "IoU = Area(Overlap) / Area(Union). Nó đo lường mức độ chồng chéo giữa bounding box dự đoán và bounding box thực tế (ground truth). Giá trị IoU cao cho thấy dự đoán tốt.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Non-Maximum Suppression (NMS) trong YOLO được sử dụng để làm gì?",
+        options: ["A) Để tăng số lượng bounding box dự đoán", "B) Để loại bỏ các bounding box dự đoán trùng lặp hoặc có độ tin cậy thấp, giữ lại các hộp tốt nhất", "C) Để chuẩn hóa tọa độ của bounding box", "D) Để tăng tốc độ xử lý của Backbone"],
+        correct: 1,
+        explanation: "Sau khi mạng dự đoán nhiều bounding box cho cùng một đối tượng, NMS được áp dụng để loại bỏ các hộp dư thừa. Nó giữ lại hộp có điểm tin cậy cao nhất và loại bỏ các hộp khác có IoU lớn với hộp đó.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Hàm mất mát trong YOLO thường bao gồm những thành phần nào?",
+        options: ["A) Chỉ mất mát về vị trí bounding box", "B) Chỉ mất mát về phân loại lớp", "C) Mất mát vị trí, mất mát độ tin cậy (objectness score), và mất mát phân loại lớp", "D) Chỉ mất mát về kích thước ảnh"],
+        correct: 2,
+        explanation: "Hàm mất mát của YOLO là một tổng có trọng số của nhiều thành phần: mất mát do sai lệch tọa độ bounding box, mất mát do sai lệch kích thước bounding box, mất mát về điểm tin cậy (objectness - liệu có đối tượng trong hộp đó không), và mất mát về phân loại lớp của đối tượng.",
+        difficulty: "Medium"
+    },
+    {
+        question: "WGAN (Wasserstein GAN) sử dụng hàm mất mát nào để cải thiện sự ổn định so với GAN gốc?",
+        options: ["A) Minimax Loss với hàm Sigmoid", "B) Khoảng cách Wasserstein (Earth Mover's Distance) và critic thay vì discriminator", "C) Focal Loss", "D) L1 Loss"],
+        correct: 1,
+        explanation: "WGAN sử dụng khoảng cách Wasserstein để đo sự khác biệt giữa phân phối dữ liệu thật và giả. Discriminator được thay thế bằng một 'critic' không có hàm Sigmoid ở cuối và được huấn luyện để ước lượng khoảng cách này. Điều này giúp giải quyết vấn đề vanishing gradients và mode collapse tốt hơn.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Trong kiến trúc YOLO, phần 'Neck' (ví dụ: FPN, PANet) có vai trò gì?",
+        options: ["A) Chỉ tăng số kênh của feature map", "B) Kết hợp các feature map từ các tầng khác nhau của Backbone để tạo feature pyramid, giúp phát hiện đối tượng ở nhiều tỷ lệ", "C) Thực hiện Non-Maximum Suppression", "D) Là lớp output cuối cùng"],
+        correct: 1,
+        explanation: "Neck lấy các feature map từ các mức khác nhau của Backbone, sau đó kết hợp và tinh chỉnh chúng (thường qua các kết nối top-down và bottom-up) để tạo ra một tập hợp các feature map mới giàu thông tin hơn và ở nhiều tỷ lệ khác nhau, rất quan trọng để phát hiện đối tượng có kích thước đa dạng.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Conditional GAN (cGAN) khác GAN cơ bản ở điểm nào?",
+        options: ["A) cGAN không có Discriminator", "B) cGAN cho phép Generator và Discriminator nhận thêm thông tin điều kiện (ví dụ: nhãn lớp) để kiểm soát việc tạo mẫu", "C) cGAN chỉ tạo ra ảnh đen trắng", "D) cGAN luôn hội tụ nhanh hơn GAN cơ bản"],
+        correct: 1,
+        explanation: "cGAN cho phép điều khiển quá trình sinh dữ liệu bằng cách cung cấp thêm thông tin điều kiện (y) cho cả Generator G(z,y) và Discriminator D(x,y). Ví dụ, có thể yêu cầu GAN tạo ảnh của một lớp cụ thể.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Tại sao việc huấn luyện GAN thường được coi là khó khăn và không ổn định?",
+        options: ["A) Vì chúng yêu cầu quá nhiều dữ liệu", "B) Vì Generator và Discriminator phải đạt được một điểm cân bằng Nash, điều này khó tìm và duy trì", "C) Vì chúng chỉ hoạt động tốt trên ảnh có độ phân giải thấp", "D) Vì chúng không sử dụng hàm kích hoạt phi tuyến"],
+        correct: 1,
+        explanation: "Huấn luyện GAN là một bài toán tìm điểm cân bằng trong một trò chơi minimax giữa hai mạng. Việc đạt được sự cân bằng này rất nhạy cảm với kiến trúc mạng, siêu tham số và quá trình tối ưu, dễ dẫn đến các vấn đề như mode collapse hoặc vanishing gradients.",
+        difficulty: "Medium"
+    },
+     {
+        question: "CycleGAN là một loại GAN được thiết kế cho tác vụ nào?",
+        options: ["A) Sinh ảnh siêu phân giải (Super-Resolution)", "B) Chuyển đổi style giữa hai domain ảnh không cần cặp dữ liệu tương ứng (Unpaired Image-to-Image Translation)", "C) Phát hiện đối tượng trong video", "D) Nén ảnh"],
+        correct: 1,
+        explanation: "CycleGAN nổi tiếng với khả năng học ánh xạ giữa hai domain ảnh mà không cần các cặp ảnh tương ứng (paired data). Ví dụ, chuyển ảnh ngựa thành ngựa vằn, hoặc ảnh mùa hè thành mùa đông, dựa trên việc học tính nhất quán vòng lặp (cycle consistency).",
+        difficulty: "Medium"
+    },
+    {
+        question: "Trong YOLO, mAP (mean Average Precision) là một thước đo quan trọng. Nó đánh giá điều gì?",
+        options: ["A) Tốc độ xử lý ảnh của mô hình", "B) Độ chính xác tổng thể của mô hình trong việc phát hiện và phân loại đối tượng trên nhiều ngưỡng IoU và nhiều lớp", "C) Kích thước bộ nhớ mà mô hình chiếm dụng", "D) Số lượng đối tượng tối đa mô hình có thể phát hiện"],
+        correct: 1,
+        explanation: "mAP là giá trị trung bình của Average Precision (AP) qua tất cả các lớp đối tượng. AP cho một lớp được tính từ đường cong Precision-Recall, thể hiện khả năng của mô hình trong việc cân bằng giữa độ chính xác (precision) và độ phủ (recall) khi phát hiện đối tượng của lớp đó. Thường được tính trên nhiều ngưỡng IoU.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Kỹ thuật Data Augmentation có lợi ích gì khi huấn luyện mô hình YOLO?",
+        options: ["A) Giảm số lượng anchor box cần thiết", "B) Tăng kích thước hiệu dụng của tập huấn luyện, giúp mô hình tổng quát hóa tốt hơn và giảm overfitting", "C) Làm cho quá trình Non-Maximum Suppression nhanh hơn", "D) Thay thế hoàn toàn nhu cầu về một Backbone mạnh"],
+        correct: 1,
+        explanation: "Data augmentation tạo ra các biến thể của dữ liệu huấn luyện gốc (ví dụ: xoay, lật, thay đổi màu sắc, cắt xén ảnh) để mô hình học được các đặc trưng bất biến hơn và chống lại overfitting, đặc biệt khi dữ liệu gốc hạn chế.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Kiến trúc YOLO nào giới thiệu khái niệm CSPNet (Cross Stage Partial Network) vào Backbone để cải thiện hiệu suất và giảm tính toán?",
+        options: ["A) YOLOv1", "B) YOLOv2 (YOLO9000)", "C) YOLOv3", "D) YOLOv4 / YOLOv5 (và các phiên bản sau)"],
+        correct: 3,
+        explanation: "CSPNet được tích hợp vào Backbone (ví dụ CSPDarknet53 trong YOLOv4) và Neck của các phiên bản YOLO sau này (như YOLOv4, YOLOv5) để giảm chi phí tính toán và cải thiện luồng gradient, giúp mô hình học hiệu quả hơn.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Trong GAN, tại sao đôi khi người ta sử dụng one-sided label smoothing cho Discriminator?",
+        options: ["A) Để làm cho Generator dễ dàng đánh lừa Discriminator hơn", "B) Để ngăn Discriminator trở nên quá tự tin vào các dự đoán của nó, giúp ổn định quá trình huấn luyện", "C) Để tăng tốc độ hội tụ của Discriminator", "D) Để giảm số lượng tham số của Discriminator"],
+        correct: 1,
+        explanation: "One-sided label smoothing thay thế nhãn '1' (cho dữ liệu thật) bằng một giá trị hơi nhỏ hơn (ví dụ: 0.9). Điều này ngăn Discriminator trở nên quá chắc chắn về các quyết định của nó đối với mẫu thật, có thể giúp giảm vanishing gradients cho Generator và làm quá trình huấn luyện ổn định hơn.",
+        difficulty: "Medium"
+    },
+    {
+        question: "So với Faster R-CNN, ưu điểm chính của YOLO là gì?",
+        options: ["A) Luôn có mAP cao hơn trên mọi tập dữ liệu", "B) Khả năng phát hiện đối tượng rất nhỏ tốt hơn", "C) Tốc độ inference (suy luận) nhanh hơn đáng kể", "D) Kiến trúc đơn giản hơn và dễ huấn luyện hơn"],
+        correct: 2,
+        explanation: "YOLO (một one-stage detector) xử lý toàn bộ ảnh một lần để dự đoán bounding box và lớp, trong khi Faster R-CNN (một two-stage detector) có giai đoạn tạo vùng đề xuất (Region Proposal Network) riêng biệt. Điều này làm cho YOLO nhanh hơn nhiều, phù hợp cho các ứng dụng thời gian thực.",
+        difficulty: "Medium"
+    },
+    {
+        question: "StyleGAN nổi tiếng với khả năng nào?",
+        options: ["A) Phát hiện đối tượng trong ảnh nghệ thuật", "B) Sinh ra ảnh chất lượng rất cao và có khả năng kiểm soát các thuộc tính style của ảnh (ví dụ: khuôn mặt, kiểu tóc)", "C) Dịch văn bản sang ảnh", "D) Nén video hiệu quả"],
+        correct: 1,
+        explanation: "StyleGAN và các phiên bản kế thừa của nó (StyleGAN2, StyleGAN3) đã đạt được những kết quả ấn tượng trong việc sinh ảnh chân thực, đặc biệt là ảnh khuôn mặt. Chúng cho phép kiểm soát các khía cạnh khác nhau của style ảnh ở các mức độ chi tiết khác nhau thông qua việc điều chỉnh các vector latent.",
+        difficulty: "Medium"
+    },
+     {
+        question: "Hàm sigmoid được dùng ở lớp cuối của Discriminator trong GAN gốc có thể gây ra vấn đề gì?",
+        options: ["A) Exploding gradients", "B) Vanishing gradients cho Generator khi Discriminator quá tự tin", "C) Mode seeking behavior", "D) Tăng chi phí tính toán"],
+        correct: 1,
+        explanation: "Khi Discriminator trở nên rất giỏi và các dự đoán của nó (sau sigmoid) tiến gần đến 0 (cho mẫu giả) hoặc 1 (cho mẫu thật), đạo hàm của hàm sigmoid ở các vùng này rất nhỏ. Điều này làm cho gradient truyền về Generator cũng rất nhỏ, gây ra vanishing gradients và Generator khó học.",
+        difficulty: "Medium"
+    },
+    {
+        question: "Trong YOLO, mỗi anchor box thường được liên kết với bao nhiêu thông số dự đoán?",
+        options: ["A) Chỉ 1 (xác suất lớp)", "B) 2 (tọa độ x, y)", "C) 4 (tọa độ x, y, w, h)", "D) 5 + số lớp (4 cho bounding box, 1 cho objectness, và số lớp cho class probabilities)"],
+        correct: 3,
+        explanation: "Đối với mỗi anchor box tại một ô lưới, YOLO thường dự đoán: 4 giá trị cho tọa độ và kích thước bounding box (ví dụ: tx, ty, tw, th là độ lệch so với anchor), 1 giá trị cho điểm tin cậy (objectness score), và C giá trị cho xác suất của từng lớp (nếu có C lớp).",
+        difficulty: "Medium"
+    },
+
+    // --- HARD (15 câu) ---
+    {
+        question: "Wasserstein GAN (WGAN) giải quyết vấn đề vanishing gradients trong GAN gốc bằng cách nào?",
+        options: ["A) Sử dụng một Generator phức tạp hơn", "B) Loại bỏ hàm sigmoid ở lớp cuối của critic và sử dụng hàm mất mát dựa trên khoảng cách Wasserstein, đồng thời ép buộc điều kiện Lipschitz cho critic", "C) Thêm nhiễu vào đầu vào của Discriminator", "D) Sử dụng nhiều Discriminator"],
+        correct: 1,
+        explanation: "WGAN thay thế hàm mất mát minimax bằng một hàm mất mát dựa trên khoảng cách Wasserstein (ước lượng bằng output của critic). Critic không có sigmoid ở cuối. Để đảm bảo critic ước lượng đúng khoảng cách Wasserstein, trọng số của nó phải bị ràng buộc (ví dụ: weight clipping hoặc gradient penalty) để thỏa mãn điều kiện Lipschitz. Điều này cung cấp gradient ổn định hơn cho Generator.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Kỹ thuật 'weight clipping' trong WGAN gốc có thể dẫn đến những vấn đề gì?",
+        options: ["A) Luôn dẫn đến mode collapse", "B) Có thể khiến critic học các hàm quá đơn giản hoặc làm gradient bị bão hòa/biến mất ở các giá trị biên", "C) Làm tăng đáng kể thời gian huấn luyện cho mỗi epoch", "D) Yêu cầu kích thước batch rất lớn"],
+        correct: 1,
+        explanation: "Weight clipping ép buộc các trọng số của critic nằm trong một khoảng cố định (ví dụ [-c, c]). Nếu c quá nhỏ, critic có thể bị đẩy về phía các hàm đơn giản, hạn chế khả năng học. Nếu c quá lớn, mất nhiều thời gian để trọng số đạt đến giới hạn, và gradient có thể bị bão hòa ở các giá trị biên, làm chậm quá trình học.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Gradient Penalty trong WGAN-GP được tính toán như thế nào?",
+        options: ["A) Dựa trên norm của trọng số của critic", "B) Dựa trên sự khác biệt giữa output của critic cho mẫu thật và mẫu giả", "C) Dựa trên norm của gradient của critic đối với các điểm nội suy ngẫu nhiên giữa các cặp mẫu thật và mẫu giả", "D) Bằng cách thêm nhiễu Gaussian vào gradient của critic"],
+        correct: 2,
+        explanation: "Gradient Penalty (GP) trong WGAN-GP được thiết kế để ép buộc điều kiện 1-Lipschitz một cách 'mềm mại'. Nó tính toán gradient của output của critic đối với các điểm đầu vào được nội suy tuyến tính ngẫu nhiên giữa các mẫu từ phân phối dữ liệu thật và phân phối dữ liệu sinh ra. Sau đó, nó phạt nếu norm của các gradient này khác xa 1.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Trong kiến trúc YOLOv3, việc sử dụng feature pyramid ở 3 tỷ lệ khác nhau nhằm mục đích gì?",
+        options: ["A) Để tăng tốc độ xử lý ảnh", "B) Để phát hiện các đối tượng có kích thước khác nhau một cách hiệu quả hơn (đối tượng nhỏ ở feature map độ phân giải cao, đối tượng lớn ở feature map độ phân giải thấp)", "C) Để giảm số lượng anchor box cần thiết", "D) Để cho phép mô hình hoạt động trên nhiều loại ảnh khác nhau"],
+        correct: 1,
+        explanation: "YOLOv3 dự đoán bounding box trên 3 feature map ở các tỷ lệ khác nhau. Feature map có độ phân giải cao hơn (kích thước lớn hơn) phù hợp để phát hiện các đối tượng nhỏ, trong khi feature map có độ phân giải thấp hơn (kích thước nhỏ hơn, nhưng trường nhìn rộng hơn) phù hợp để phát hiện các đối tượng lớn.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Hàm mất mát Focal Loss được giới thiệu trong bài báo nào và nhằm giải quyết vấn đề gì trong phát hiện đối tượng?",
+        options: ["A) YOLOv1, giải quyết vấn đề bounding box không chính xác", "B) Faster R-CNN, giải quyết vấn đề vùng đề xuất chậm", "C) RetinaNet, giải quyết vấn đề mất cân bằng giữa các mẫu easy negative và hard positive trong one-stage detectors", "D) SSD, giải quyết vấn đề phát hiện đối tượng nhỏ"],
+        correct: 2,
+        explanation: "Focal Loss được giới thiệu trong bài báo về RetinaNet. Nó điều chỉnh hàm cross-entropy tiêu chuẩn để giảm trọng số của các mẫu dễ phân loại (thường là các anchor box nền chiếm đa số) và tập trung hơn vào các mẫu khó phân loại (đối tượng). Điều này giúp các bộ phát hiện một giai đoạn đạt được độ chính xác tương đương các bộ phát hiện hai giai đoạn.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Progressive Growing of GANs (PGGAN) là một kỹ thuật giúp huấn luyện GAN sinh ảnh độ phân giải cao bằng cách nào?",
+        options: ["A) Sử dụng nhiều Discriminator cùng lúc", "B) Tăng dần kích thước batch trong quá trình huấn luyện", "C) Bắt đầu huấn luyện Generator và Discriminator với ảnh độ phân giải thấp, sau đó từ từ thêm các lớp mới để tăng độ phân giải ảnh sinh ra và ảnh thật", "D) Chỉ huấn luyện Generator, giữ Discriminator cố định"],
+        correct: 2,
+        explanation: "PGGAN bắt đầu bằng việc huấn luyện GAN trên ảnh có độ phân giải rất thấp (ví dụ 4x4). Khi quá trình huấn luyện ổn định, các lớp mới được thêm từ từ vào cả Generator và Discriminator để tăng gấp đôi độ phân giải. Quá trình này lặp lại cho đến khi đạt được độ phân giải mong muốn. Điều này giúp ổn định quá trình học và cho phép sinh ảnh chất lượng cao.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Trong StyleGAN, 'mapping network' có vai trò gì?",
+        options: ["A) Ánh xạ ảnh đầu vào sang một không gian latent Z", "B) Ánh xạ một vector latent Z (thường từ phân phối chuẩn) sang một không gian latent trung gian W, không gian này ít bị 'vướng víu' (disentangled) hơn", "C) Thực hiện Non-Maximum Suppression", "D) Tạo ra các anchor box"],
+        correct: 1,
+        explanation: "Mapping network trong StyleGAN là một chuỗi các lớp fully connected, nhận đầu vào là vector latent z (thường được lấy mẫu từ phân phối Gaussian) và biến đổi nó thành một vector latent trung gian w thuộc không gian W. Không gian W được thiết kế để các yếu tố biến thiên của dữ liệu ít bị 'vướng víu' (entangled) hơn so với không gian Z, cho phép kiểm soát các thuộc tính style của ảnh sinh ra tốt hơn.",
+        difficulty: "Hard"
+    },
+    {
+        question: "PANet (Path Aggregation Network), thường được dùng làm Neck trong các phiên bản YOLO, cải tiến FPN (Feature Pyramid Network) như thế nào?",
+        options: ["A) Chỉ sử dụng kết nối top-down", "B) Thêm một đường dẫn bottom-up tăng cường sau đường dẫn top-down của FPN, giúp truyền thông tin cục bộ mạnh mẽ hơn", "C) Loại bỏ hoàn toàn các lớp tích chập", "D) Giảm số lượng feature map ở mỗi tỷ lệ"],
+        correct: 1,
+        explanation: "FPN chủ yếu sử dụng đường dẫn top-down để kết hợp các feature map đa tỷ lệ. PANet cải tiến điều này bằng cách thêm một đường dẫn bottom-up augmentation sau đó. Đường dẫn bottom-up này giúp truyền các tín hiệu đặc trưng cục bộ mạnh từ các lớp nông hơn lên các feature map sâu hơn, bổ sung cho thông tin ngữ nghĩa từ đường dẫn top-down.",
+        difficulty: "Hard"
+    },
+     {
+        question: "Self-Attention trong Transformer có độ phức tạp tính toán là bao nhiêu đối với một chuỗi có độ dài N?",
+        options: ["A) O(N)", "B) O(N log N)", "C) O(N^2)", "D) O(N^3)"],
+        correct: 2,
+        explanation: "Trong self-attention, mỗi token cần tính toán điểm chú ý với tất cả N token khác (bao gồm chính nó). Việc tính toán ma trận attention scores (Q.K^T) có độ phức tạp O(N^2 * d), trong đó d là số chiều của key/query. Do đó, độ phức tạp tổng thể là bậc hai theo độ dài chuỗi N.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Kiến trúc Transformer sử dụng cơ chế nào để xử lý thông tin về vị trí của các token trong chuỗi, do self-attention vốn không nhạy cảm với thứ tự?",
+        options: ["A) Convolutional layers", "B) Recurrent Neural Networks (RNNs)", "C) Positional Encoding", "D) Bỏ qua thông tin vị trí"],
+        correct: 2,
+        explanation: "Vì self-attention xử lý các token một cách song song và không có thông tin về thứ tự, Transformer thêm các vector Positional Encoding vào embedding của mỗi token để cung cấp thông tin về vị trí tuyệt đối hoặc tương đối của chúng trong chuỗi.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Trong các mô hình GAN, việc sử dụng Batch Normalization cho cả Generator và Discriminator có thể gây ra vấn đề gì nếu không cẩn thận?",
+        options: ["A) Luôn làm giảm chất lượng ảnh sinh ra", "B) Có thể gây ra tương quan không mong muốn giữa các mẫu trong cùng một batch, làm giảm sự đa dạng của mẫu sinh ra hoặc gây bất ổn", "C) Tăng đáng kể thời gian huấn luyện mà không cải thiện hiệu suất", "D) Khiến Discriminator luôn thắng Generator"],
+        correct: 1,
+        explanation: "Batch Normalization chuẩn hóa theo batch. Trong Generator, nếu các mẫu trong cùng một batch trở nên tương quan do BN, nó có thể hạn chế sự đa dạng. Trong Discriminator, việc BN trên cả mẫu thật và giả trong cùng batch có thể rò rỉ thông tin, làm ảnh hưởng đến việc học. Các kỹ thuật như Instance Normalization hoặc Layer Normalization đôi khi được ưu tiên hơn trong GAN.",
+        difficulty: "Hard"
+    },
+     {
+        question: "So sánh YOLOv5 và các phiên bản YOLO trước đó (ví dụ YOLOv3, YOLOv4), một trong những thay đổi đáng chú ý là gì?",
+        options: ["A) YOLOv5 loại bỏ hoàn toàn anchor boxes", "B) YOLOv5 thường được triển khai bằng PyTorch và có cấu trúc module linh hoạt hơn, dễ dàng tùy chỉnh và huấn luyện hơn", "C) YOLOv5 sử dụng một Backbone hoàn toàn mới dựa trên Transformer", "D) YOLOv5 chỉ hoạt động tốt trên GPU của NVIDIA"],
+        correct: 1,
+        explanation: "YOLOv5 (và các phiên bản sau của nó) được phát triển bởi Ultralytics và được viết bằng PyTorch, nổi bật với cấu trúc dễ sử dụng, huấn luyện và triển khai. Nó tiếp tục sử dụng anchor boxes (mặc dù có cơ chế tự động học anchor). Các phiên bản YOLO trước (v1-v4) của Joseph Redmon được viết bằng Darknet (C).",
+        difficulty: "Hard"
+    },
+    {
+        question: "Trong huấn luyện GAN, tại sao việc cân bằng tốc độ học giữa Generator và Discriminator lại quan trọng?",
+        options: ["A) Không quan trọng, mạng nào học nhanh hơn sẽ tốt hơn", "B) Nếu một mạng học quá nhanh so với mạng kia, quá trình huấn luyện có thể không hội tụ hoặc một trong hai mạng sẽ 'áp đảo' mạng còn lại", "C) Chỉ cần Generator học nhanh, Discriminator có thể học chậm", "D) Việc này chỉ quan trọng đối với cGAN"],
+        correct: 1,
+        explanation: "GAN là một trò chơi minimax. Nếu Discriminator học quá nhanh và trở nên quá giỏi, Generator sẽ không nhận được gradient hữu ích để cải thiện. Ngược lại, nếu Generator quá giỏi và dễ dàng đánh lừa Discriminator, Discriminator sẽ không cung cấp được phản hồi chính xác. Do đó, việc cân bằng tốc độ học (thường bằng cách cập nhật một mạng nhiều lần hơn mạng kia trong một số trường hợp, hoặc điều chỉnh learning rate) là rất quan trọng.",
+        difficulty: "Hard"
+    },
+    {
+        question: "Spectral Normalization là một kỹ thuật được áp dụng cho các trọng số của Discriminator trong GAN nhằm mục đích gì?",
+        options: ["A) Tăng tốc độ tính toán của Discriminator", "B) Giảm số lượng tham số của Discriminator", "C) Ràng buộc hằng số Lipschitz của Discriminator, giúp ổn định quá trình huấn luyện, tương tự như Gradient Penalty nhưng theo cách khác", "D) Buộc các trọng số phải dương"],
+        correct: 2,
+        explanation: "Spectral Normalization chuẩn hóa ma trận trọng số của mỗi lớp trong Discriminator bằng cách chia cho giá trị riêng (spectral norm) lớn nhất của nó. Điều này giúp ràng buộc hằng số Lipschitz của Discriminator, làm cho hàm này 'mượt mà' hơn và quá trình huấn luyện GAN ổn định hơn, đặc biệt hữu ích trong các mô hình như SNGAN.",
+        difficulty: "Hard"
+    },
+    {
+        question: "YOLOX là một phiên bản YOLO nổi bật với việc loại bỏ thành phần nào và thay thế bằng chiến lược gán nhãn nào?",
+        options: ["A) Loại bỏ Backbone, thay bằng Transformer Encoder", "B) Loại bỏ anchor boxes (anchor-free) và sử dụng chiến lược gán nhãn SimOTA", "C) Loại bỏ Neck, kết nối trực tiếp Backbone với Head", "D) Loại bỏ Non-Maximum Suppression, thay bằng Soft-NMS"],
+        correct: 1,
+        explanation: "YOLOX là một bộ phát hiện anchor-free, nghĩa là nó không sử dụng các anchor box được định nghĩa trước. Thay vào đó, nó trực tiếp dự đoán vị trí và kích thước của đối tượng. YOLOX cũng giới thiệu SimOTA, một chiến lược gán nhãn (label assignment) tiên tiến để quyết định ô lưới nào chịu trách nhiệm cho đối tượng nào trong quá trình huấn luyện, dựa trên sự tối ưu hóa chi phí.",
+        difficulty: "Hard"
+    },
+
+    // --- EXPERT (5 câu) ---
+    {
+        question: "Trong StyleGAN2, kỹ thuật 'modulated convolution' và 'demodulation' được sử dụng để làm gì?",
+        options: ["A) Để giảm số lượng kênh trong các lớp tích chập", "B) Để cho phép vector style (từ không gian W) kiểm soát các đặc trưng ở mỗi lớp tích chập một cách cục bộ mà không gây ra các artifact (hiện vật) không mong muốn như trong StyleGAN gốc", "C) Để tăng tốc độ xử lý của mapping network", "D) Để loại bỏ hoàn toàn nhu cầu về nhiễu ngẫu nhiên (noise inputs)"],
+        correct: 1,
+        explanation: "StyleGAN gốc sử dụng Adaptive Instance Normalization (AdaIN) để đưa thông tin style vào. Tuy nhiên, AdaIN có thể gây ra các artifact dạng giọt nước. StyleGAN2 thay thế AdaIN bằng modulated convolution và demodulation. Modulated convolution scale các trọng số của lớp tích chập dựa trên vector style. Demodulation sau đó chuẩn hóa lại output để đảm bảo các đặc trưng không bị thay đổi về độ lớn một cách không kiểm soát. Điều này giúp kiểm soát style tốt hơn và giảm artifact.",
+        difficulty: "Expert"
+    },
+    {
+        question: "Consistency Regularization là một kỹ thuật quan trọng trong học bán giám sát (Semi-Supervised Learning) cho GAN. Ý tưởng chính của nó là gì?",
+        options: ["A) Buộc Generator phải tạo ra các mẫu giống hệt nhau nếu đầu vào nhiễu giống nhau", "B) Buộc Discriminator phải đưa ra dự đoán nhất quán (ví dụ: cùng một lớp) cho một mẫu không nhãn khi mẫu đó bị nhiễu loạn nhẹ bởi các phép tăng cường dữ liệu khác nhau", "C) Đảm bảo rằng hàm mất mát của Generator và Discriminator luôn giảm đều", "D) Giữ cho các trọng số của Generator và Discriminator không thay đổi quá nhiều giữa các epoch"],
+        correct: 1,
+        explanation: "Trong học bán giám sát, chúng ta có nhiều dữ liệu không nhãn. Consistency Regularization khuyến khích Discriminator đưa ra các dự đoán giống nhau cho cùng một mẫu không nhãn khi mẫu đó được đưa qua các phép data augmentation khác nhau. Ví dụ, nếu một ảnh không nhãn được xoay nhẹ, Discriminator vẫn nên dự đoán nó thuộc cùng một lớp (nếu nó là mẫu thật) hoặc vẫn là mẫu giả. Điều này giúp Discriminator học các biểu diễn mạnh mẽ hơn từ dữ liệu không nhãn.",
+        difficulty: "Expert"
+    },
+    {
+        question: "Trong các phiên bản YOLO gần đây (ví dụ DAMO-YOLO, RTMDet), khái niệm 'label assignment' động (dynamic label assignment) như SimOTA, TAL có ưu điểm gì so với các phương pháp gán nhãn tĩnh dựa trên IoU cố định?",
+        options: ["A) Luôn gán nhiều anchor box hơn cho mỗi đối tượng ground truth", "B) Giảm đáng kể số lượng đối tượng ground truth cần thiết để huấn luyện", "C) Cho phép mô hình tự động quyết định các anchor box/ô lưới 'tốt nhất' để chịu trách nhiệm cho mỗi đối tượng dựa trên chi phí kết hợp (ví dụ: loss phân loại và loss hồi quy), thay vì chỉ dựa trên IoU với anchor cố định. Điều này giúp giải quyết vấn đề mất cân bằng giữa các anchor dương/âm tốt hơn.", "D) Loại bỏ hoàn toàn nhu cầu về anchor box"],
+        correct: 2,
+        explanation: "Các phương pháp gán nhãn tĩnh (ví dụ: gán anchor cho ground truth nếu IoU > 0.5) có thể không tối ưu. Gán nhãn động như SimOTA (trong YOLOX) hay Task Alignment Learning (TAL) (trong RTMDet) xem xét cả chất lượng phân loại và chất lượng hồi quy của các dự đoán từ các anchor/ô lưới khác nhau để quyết định gán nhãn một cách linh hoạt hơn trong quá trình huấn luyện. Điều này giúp mô hình chọn được các mẫu 'dương' chất lượng cao hơn, cải thiện hiệu suất.",
+        difficulty: "Expert"
+    },
+    {
+        question: "Sự khác biệt chính trong cách tiếp cận của ViT (Vision Transformer) so với CNN truyền thống trong việc nắm bắt thông tin không gian là gì?",
+        options: ["A) ViT không sử dụng bất kỳ thông tin không gian nào", "B) ViT sử dụng các lớp tích chập 1x1 để nắm bắt thông tin không gian toàn cục", "C) CNN dựa vào các phép tích chập cục bộ để xây dựng biểu diễn phân cấp. ViT chia ảnh thành các patch, coi chúng như một chuỗi và sử dụng self-attention để nắm bắt mối quan hệ toàn cục giữa các patch ngay từ đầu, kết hợp với positional embedding.", "D) ViT chỉ hoạt động tốt với ảnh xám"],
+        correct: 2,
+        explanation: "CNN xây dựng các đặc trưng từ cục bộ đến toàn cục thông qua việc xếp chồng các lớp tích chập với receptive field tăng dần. Ngược lại, ViT chia ảnh thành các patch, biến chúng thành một chuỗi các token và sử dụng cơ chế self-attention của Transformer để trực tiếp mô hình hóa mối quan hệ giữa tất cả các cặp patch. Thông tin vị trí được cung cấp bởi positional embedding. Điều này cho phép ViT nắm bắt các phụ thuộc xa (long-range dependencies) hiệu quả hơn ngay từ các lớp đầu.",
+        difficulty: "Expert"
+    },
+    {
+        question: "Diffusion Models là một lớp mô hình sinh mạnh mẽ gần đây. Nguyên lý hoạt động cơ bản của chúng là gì?",
+        options: ["A) Huấn luyện một Generator và một Discriminator để chơi trò chơi minimax", "B) Từ từ thêm nhiễu vào dữ liệu thật qua một chuỗi các bước (forward process), sau đó huấn luyện một mạng nơ-ron để đảo ngược quá trình này, tức là từ từ loại bỏ nhiễu để tạo ra mẫu mới từ nhiễu thuần túy (reverse process)", "C) Mã hóa dữ liệu vào một không gian latent có phân phối chuẩn, sau đó giải mã từ không gian latent đó", "D) Sử dụng một kiến trúc Transformer để dự đoán từng pixel của ảnh một cách tự hồi quy"],
+        correct: 1,
+        explanation: "Diffusion models hoạt động theo hai quá trình: <br>1. <b>Forward (diffusion) process:</b> Thêm nhiễu Gaussian một cách từ từ vào dữ liệu huấn luyện qua nhiều bước thời gian, cho đến khi dữ liệu trở thành nhiễu thuần túy. Quá trình này có công thức toán học xác định. <br>2. <b>Reverse (denoising) process:</b> Huấn luyện một mạng nơ-ron (thường là kiến trúc U-Net) để học cách đảo ngược quá trình thêm nhiễu. Tức là, ở mỗi bước, mạng dự đoán nhiễu đã được thêm vào và loại bỏ nó. Bắt đầu từ nhiễu ngẫu nhiên, lặp lại quá trình khử nhiễu này sẽ tạo ra một mẫu dữ liệu mới. Diffusion models nổi tiếng với khả năng sinh ảnh chất lượng rất cao.",
+        difficulty: "Expert"
+    }
+];
+        // ===================================================================================
+        // == KẾT THÚC PHẦN DỮ LIỆU CÂU HỎI                                                ==
+        // ===================================================================================
+
+
+        const AppState = {
+            currentQuestionIndex: 0,
+            score: 0,
+            answers: [],
+            flaggedQuestions: new Set(),
+            questionOrder: [],
+            // timerInterval: null, // Removed
+            // timeLeftPerQuestion: 30, // Removed
+            // timeLeft: 30, // Removed
+            isReviewMode: false,
+            confettiLaunched: false
+        };
+
+        const DOM = {
+            appWrapper: document.querySelector('.app-wrapper'),
+            sidebar: document.getElementById('questionSidebar'),
+            openSidebarBtn: document.getElementById('openSidebarBtn'),
+            questionNavList: document.getElementById('questionNavList'),
+            answeredCountDisplay: document.getElementById('answeredCountDisplay'),
+            totalSidebarQuestionsDisplay: document.getElementById('totalSidebarQuestionsDisplay'),
+            mainProgressBar: document.getElementById('mainProgressBar'),
+            timerDisplay: document.getElementById('timerDisplay'),
+            // timeLeftDisplay: document.getElementById('timeLeftDisplay'), // Associated with timer
+            difficultyDisplay: document.getElementById('difficultyDisplayEl'),
+            questionTextEl: document.getElementById('questionTextEl'),
+            optionsContainerEl: document.getElementById('optionsContainerEl'),
+            explanationContainerEl: document.getElementById('explanationContainerEl'),
+            explanationTextEl: document.getElementById('explanationTextEl'),
+            prevQuestionBtnEl: document.getElementById('prevQuestionBtnEl'),
+            nextQuestionBtnEl: document.getElementById('nextQuestionBtnEl'),
+            flagQuestionBtnEl: document.getElementById('flagQuestionBtnEl'),
+            flagIconControlEl: document.getElementById('flagIconControlEl'),
+            flagBtnTextEl: document.getElementById('flagBtnTextEl'),
+            resultAreaEl: document.getElementById('resultAreaEl'),
+            finalScoreDisplay: document.getElementById('finalScoreDisplay'),
+            totalResultQuestionsDisplay: document.getElementById('totalResultQuestionsDisplay'),
+            finalPercentageDisplay: document.getElementById('finalPercentageDisplay'),
+            resultMessageEl: document.getElementById('resultMessageEl'),
+            restartQuizBtnSidebar: document.getElementById('restartQuizBtnSidebar'),
+            restartQuizBtnResultEl: document.getElementById('restartQuizBtnResultEl'),
+            reviewAnswersBtnEl: document.getElementById('reviewAnswersBtnEl'),
+            toggleDarkModeBtn: document.getElementById('toggleDarkModeBtn'),
+            saveProgressBtnSidebar: document.getElementById('saveProgressBtnSidebar'),
+            quizAreaEl: document.getElementById('quizAreaEl'),
+            quizMainContent: document.getElementById('quizMainContent'),
+            flaggedQuestionsReviewAreaEl: document.getElementById('flaggedQuestionsReviewAreaEl'),
+            flaggedListEl: document.getElementById('flaggedListEl')
+        };
+
+
+        const QuizApp = {
+            init() {
+                if (questions.length === 0) {
+                    DOM.questionTextEl.innerHTML = "Không có câu hỏi nào được tải. Vui lòng kiểm tra lại dữ liệu câu hỏi.";
+                    DOM.optionsContainerEl.innerHTML = "";
+                    document.querySelector('.quiz-header').style.display = 'none';
+                    DOM.quizAreaEl.style.display = 'none';
+                    DOM.sidebar.style.display = 'none';
+                    DOM.openSidebarBtn.style.display = 'none';
+                    return;
+                }
+                this.setupEventListeners();
+                this.loadDarkModePreference();
+                this.resetStateAndStart();
+                 DOM.timerDisplay.style.display = 'none'; // Hide timer display permanently
+            },
+
+            resetStateAndStart() {
+                this.resetState();
+                this.loadProgress();
+
+                DOM.totalSidebarQuestionsDisplay.textContent = questions.length;
+                DOM.totalResultQuestionsDisplay.textContent = questions.length;
+
+                this.renderQuestionNav();
+                this.renderCurrentQuestion();
+                // if (!AppState.isReviewMode && questions.length > 0) this.startPerQuestionTimer(); // Removed timer
+                this.updateUIBasedOnState();
+                this.handleResize();
+            },
+
+            handleResize() {
+                if (window.innerWidth <= 900) {
+                    DOM.openSidebarBtn.style.display = 'block';
+                } else {
+                    DOM.openSidebarBtn.style.display = 'none';
+                    DOM.sidebar.classList.add('open');
+                }
+            },
+            resetState() {
+                AppState.questionOrder = this.utils.shuffle([...Array(questions.length).keys()]);
+                AppState.answers = new Array(questions.length).fill(null);
+                AppState.currentQuestionIndex = 0;
+                AppState.score = 0;
+                AppState.flaggedQuestions = new Set();
+                AppState.isReviewMode = false;
+                AppState.confettiLaunched = false;
+
+                DOM.quizAreaEl.style.display = 'block';
+                DOM.resultAreaEl.style.display = 'none';
+                DOM.flaggedQuestionsReviewAreaEl.style.display = 'none';
+                DOM.reviewAnswersBtnEl.style.display = 'none';
+
+                // THÊM DÒNG NÀY ĐỂ XÓA TIẾN ĐỘ ĐÃ LƯU
+                try {
+                    localStorage.removeItem('deepLearningQuizProgress');
+                    console.log("Cleared saved progress from localStorage.");
+                } catch (e) {
+                    console.warn("Failed to clear saved progress from localStorage:", e);
+                }
+            },
+
+            loadProgress() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('deepLearningQuizProgress'));
+                    if (saved) {
+                        if (saved.answers && saved.answers.length === questions.length) AppState.answers = saved.answers;
+                        if (saved.score !== undefined) AppState.score = saved.score;
+                        if (saved.flaggedQuestions) AppState.flaggedQuestions = new Set(saved.flaggedQuestions);
+
+                        if (saved.questionOrder && saved.questionOrder.length === questions.length) {
+                            AppState.questionOrder = saved.questionOrder;
+                            if (saved.currentDisplayIndex !== undefined && saved.currentDisplayIndex < AppState.questionOrder.length) {
+                                AppState.currentQuestionIndex = saved.currentDisplayIndex;
+                            }
+                        } else {
+                             console.warn("Saved question order invalid or missing. Using new shuffle.");
+                        }
+                        console.log("Progress loaded.");
+                    }
+                } catch (e) { console.warn("Failed to load progress:", e); }
+            },
+
+            saveProgress() {
+                try {
+                    const progress = {
+                        answers: AppState.answers,
+                        score: AppState.score,
+                        flaggedQuestions: [...AppState.flaggedQuestions],
+                        currentDisplayIndex: AppState.currentQuestionIndex,
+                        questionOrder: AppState.questionOrder
+                    };
+                    localStorage.setItem('deepLearningQuizProgress', JSON.stringify(progress));
+                    this.ui.showToast("Đã lưu tiến độ!");
+                } catch (e) { console.warn("Failed to save progress:", e); }
+            },
+
+            ui: {
+                showToast(message) {
+                    let toast = document.getElementById('toast-notification');
+                    if (!toast) {
+                        toast = document.createElement('div');
+                        toast.id = 'toast-notification';
+                        document.body.appendChild(toast);
+                    }
+                    toast.textContent = message;
+                    toast.classList.add('show');
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+            },
+
+            renderCurrentQuestion() {
+                if (AppState.currentQuestionIndex >= AppState.questionOrder.length || questions.length === 0) {
+                    if (!AppState.isReviewMode && questions.length > 0) this.showResults();
+                    return;
+                }
+
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                const question = questions[originalQIndex];
+
+                DOM.questionTextEl.innerHTML = `${AppState.currentQuestionIndex + 1}. ${question.question}`;
+                DOM.difficultyDisplay.textContent = `Độ khó: ${question.difficulty}`;
+
+                DOM.optionsContainerEl.innerHTML = '';
+                const userAnswer = AppState.answers[originalQIndex];
+
+                question.options.forEach((optionText, optionIndex) => {
+                    const optionEl = document.createElement('button');
+                    optionEl.classList.add('option');
+                    optionEl.innerHTML = optionText;
+                    optionEl.dataset.index = optionIndex;
+
+                    if (AppState.isReviewMode || userAnswer !== null) {
+                        optionEl.classList.add('disabled');
+                        if (optionIndex === userAnswer) {
+                            optionEl.classList.add(userAnswer === question.correct ? 'correct' : 'incorrect');
+                        } else if (optionIndex === question.correct) {
+                            optionEl.classList.add('correct');
+                        }
+                    }
+                    if (!AppState.isReviewMode && userAnswer === null) {
+                         optionEl.addEventListener('click', () => this.handleOptionClick(optionIndex));
+                    }
+                    DOM.optionsContainerEl.appendChild(optionEl);
+                });
+
+                if (AppState.isReviewMode || userAnswer !== null) {
+                    DOM.explanationContainerEl.style.display = 'block';
+                    DOM.explanationTextEl.innerHTML = question.explanation;
+                } else {
+                    DOM.explanationContainerEl.style.display = 'none';
+                }
+                this.updateFlagButtonUI();
+                this.updateUIBasedOnState();
+                this.renderQuestionNav();
+            },
+
+            handleOptionClick(selectedIndex) {
+                if (AppState.isReviewMode) return;
+
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                if (AppState.answers[originalQIndex] !== null) return;
+
+                // clearInterval(AppState.timerInterval); // Removed timer
+                AppState.answers[originalQIndex] = selectedIndex;
+
+                if (selectedIndex === questions[originalQIndex].correct) {
+                    AppState.score++;
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 }, Ticks: 100, angle: this.utils.randomInRange(45, 135) });
+                    }
+                }
+                this.saveProgress();
+                this.renderCurrentQuestion();
+            },
+
+            renderQuestionNav() {
+                DOM.questionNavList.innerHTML = '';
+                if (questions.length === 0) return;
+
+                AppState.questionOrder.forEach((originalQIndex, displayIndex) => {
+                    const navItem = document.createElement('div');
+                    navItem.classList.add('question-nav-item');
+                    const questionData = questions[originalQIndex];
+                    const userAnswer = AppState.answers[originalQIndex];
+
+                    if (displayIndex === AppState.currentQuestionIndex) {
+                        navItem.classList.add('current');
+                    }
+
+                    if (userAnswer !== null) {
+                        // navItem.classList.add('answered'); // Base class, might be redundant now
+                        if (userAnswer === questionData.correct) {
+                            navItem.classList.add('answered-correct');
+                        } else {
+                            navItem.classList.add('answered-incorrect');
+                        }
+                    }
+
+
+                    const numSpan = document.createElement('span');
+                    numSpan.classList.add('nav-item-number');
+                    numSpan.textContent = displayIndex + 1;
+                    navItem.appendChild(numSpan);
+
+                    const flagSpan = document.createElement('span');
+                    flagSpan.classList.add('nav-item-flag');
+                    if (AppState.flaggedQuestions.has(originalQIndex)) {
+                        flagSpan.classList.add('flagged');
+                        flagSpan.textContent = '🚩';
+                    }
+                    navItem.appendChild(flagSpan);
+
+                    navItem.addEventListener('click', () => {
+                        // const currentOriginalQIndex = AppState.questionOrder[AppState.currentQuestionIndex]; // Not needed as timer is removed
+                        // if (AppState.answers[currentOriginalQIndex] === null && AppState.timeLeft > 0 && !AppState.isReviewMode) {} // Removed
+
+                        AppState.currentQuestionIndex = displayIndex;
+                        this.renderCurrentQuestion();
+                        // if (!AppState.isReviewMode) this.startPerQuestionTimer(); // Removed
+                        // else this.stopPerQuestionTimer(); // Removed
+
+                        if (window.innerWidth <= 900 && DOM.sidebar.classList.contains('open')) {
+                           DOM.sidebar.classList.remove('open');
+                        }
+                    });
+                    DOM.questionNavList.appendChild(navItem);
+                });
+                DOM.answeredCountDisplay.textContent = AppState.answers.filter(a => a !== null).length;
+            },
+
+            // startPerQuestionTimer, stopPerQuestionTimer, handleTimeOut removed
+
+            navigate(direction) {
+                const currentOriginalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                const canProceed = AppState.answers[currentOriginalQIndex] !== null || AppState.isReviewMode;
+
+                if (direction === 'next') {
+                    if (!canProceed && AppState.currentQuestionIndex < questions.length -1 && !AppState.isReviewMode) { // Added !AppState.isReviewMode
+                        this.ui.showToast("Vui lòng chọn đáp án.");
+                        return;
+                    }
+                    if (AppState.currentQuestionIndex < questions.length - 1) {
+                        AppState.currentQuestionIndex++;
+                    } else if (!AppState.isReviewMode) {
+                        this.showResults();
+                        return;
+                    } else {
+                        this.ui.showToast("Bạn đang ở câu cuối cùng của bài xem lại.");
+                        DOM.quizAreaEl.style.display = 'none';
+                        DOM.resultAreaEl.style.display = 'block';
+                        this.displayFlaggedQuestionsForReview();
+                        AppState.isReviewMode = false;
+                        return;
+                    }
+                } else if (direction === 'prev') {
+                    if (AppState.currentQuestionIndex > 0) {
+                        AppState.currentQuestionIndex--;
+                    } else if (AppState.isReviewMode) {
+                        this.ui.showToast("Bạn đang ở câu đầu tiên của bài xem lại.");
+                        return;
+                    }
+                }
+                this.renderCurrentQuestion();
+                // No timer calls here
+            },
+
+            toggleFlagCurrentQuestion() {
+                if (AppState.isReviewMode || questions.length === 0) return;
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                if (AppState.flaggedQuestions.has(originalQIndex)) {
+                    AppState.flaggedQuestions.delete(originalQIndex);
+                } else {
+                    AppState.flaggedQuestions.add(originalQIndex);
+                }
+                this.saveProgress();
+                this.updateFlagButtonUI();
+                this.renderQuestionNav();
+            },
+
+            updateFlagButtonUI() {
+                 if (questions.length === 0) {
+                    DOM.flagQuestionBtnEl.style.display = 'none';
+                    return;
+                }
+                DOM.flagQuestionBtnEl.style.display = 'flex';
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                if (AppState.flaggedQuestions.has(originalQIndex)) {
+                    DOM.flagIconControlEl.textContent = '🚩';
+                    DOM.flagIconControlEl.classList.add('flagged');
+                    DOM.flagBtnTextEl.textContent = "Bỏ đánh dấu";
+                } else {
+                    DOM.flagIconControlEl.textContent = '🏳️';
+                    DOM.flagIconControlEl.classList.remove('flagged');
+                    DOM.flagBtnTextEl.textContent = "Đánh dấu";
+                }
+            },
+
+            updateUIBasedOnState() {
+                 if (questions.length === 0) return;
+                const answeredCount = AppState.answers.filter(a => a !== null).length;
+                DOM.mainProgressBar.style.width = `${(answeredCount / questions.length) * 100}%`;
+                DOM.answeredCountDisplay.textContent = answeredCount;
+
+                DOM.prevQuestionBtnEl.disabled = AppState.currentQuestionIndex === 0;
+
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                const isCurrentAnswered = AppState.answers[originalQIndex] !== null;
+
+                if (AppState.isReviewMode) {
+                    DOM.nextQuestionBtnEl.textContent = (AppState.currentQuestionIndex === questions.length - 1) ? "Kết thúc xem" : "Tiếp >";
+                    DOM.flagQuestionBtnEl.style.display = 'none';
+                    DOM.prevQuestionBtnEl.disabled = AppState.currentQuestionIndex === 0;
+                    DOM.nextQuestionBtnEl.disabled = false;
+                    // this.stopPerQuestionTimer(); // Removed
+                } else {
+                    DOM.flagQuestionBtnEl.style.display = 'flex';
+
+                    if (AppState.currentQuestionIndex === questions.length - 1) {
+                        DOM.nextQuestionBtnEl.textContent = "Hoàn Thành";
+                        DOM.nextQuestionBtnEl.disabled = !isCurrentAnswered; // No longer depends on timed out
+                    } else {
+                        DOM.nextQuestionBtnEl.textContent = "Tiếp >";
+                        DOM.nextQuestionBtnEl.disabled = !isCurrentAnswered; // No longer depends on timed out
+                    }
+                }
+            },
+
+            showResults() {
+                // this.stopPerQuestionTimer(); // Removed
+                DOM.quizAreaEl.style.display = 'none';
+                DOM.resultAreaEl.style.display = 'block';
+                DOM.reviewAnswersBtnEl.style.display = 'inline-block';
+
+                const percentage = (AppState.score / questions.length) * 100;
+                DOM.finalScoreDisplay.textContent = `${AppState.score} / ${questions.length} (${percentage.toFixed(1)}%)`;
+
+                let message = "";
+                if (percentage >= 80) {
+                    message = "Xuất sắc! Bạn đã nắm vững kiến thức!";
+                    if (!AppState.confettiLaunched && typeof confetti === 'function') {
+                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, Ticks: 200 });
+                        AppState.confettiLaunched = true;
+                    }
+                } else if (percentage >= 60) {
+                    message = "Rất tốt! Hãy xem lại một vài câu để hoàn thiện hơn.";
+                } else if (percentage >= 40) {
+                    message = "Khá ổn! Cần ôn tập thêm một chút nhé.";
+                } else {
+                    message = "Cần cố gắng nhiều hơn. Đừng nản lòng, hãy làm lại và học hỏi!";
+                }
+                DOM.resultMessageEl.textContent = message;
+                this.displayFlaggedQuestionsForReview();
+                this.saveProgress();
+            },
+
+            displayFlaggedQuestionsForReview() {
+                DOM.flaggedListEl.innerHTML = '';
+                if (AppState.flaggedQuestions.size > 0) {
+                    DOM.flaggedQuestionsReviewAreaEl.style.display = 'block';
+                    AppState.flaggedQuestions.forEach(originalQIndex => {
+                        const displayIndex = AppState.questionOrder.indexOf(originalQIndex);
+                        if (displayIndex !== -1) {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<b>Câu ${displayIndex + 1}:</b> ${questions[originalQIndex].question.substring(0,60)}...`;
+                            li.dataset.displayIndex = displayIndex;
+                            li.addEventListener('click', () => {
+                                this.startReviewMode(displayIndex);
+                            });
+                            DOM.flaggedListEl.appendChild(li);
+                        }
+                    });
+                } else {
+                    DOM.flaggedQuestionsReviewAreaEl.style.display = 'none';
+                }
+            },
+
+            startReviewMode(startDisplayIndex = 0) {
+                if (questions.length === 0) {
+                    this.ui.showToast("Không có câu hỏi để xem lại.");
+                    return;
+                }
+                AppState.isReviewMode = true;
+                AppState.currentQuestionIndex = startDisplayIndex;
+                DOM.quizAreaEl.style.display = 'block';
+                DOM.resultAreaEl.style.display = 'none';
+                DOM.reviewAnswersBtnEl.style.display = 'none';
+                this.renderCurrentQuestion();
+                this.updateUIBasedOnState();
+                this.ui.showToast("Chế độ xem lại: Bạn có thể xem câu trả lời và giải thích.");
+                if (window.innerWidth <= 900 && DOM.sidebar.classList.contains('open')) {
+                   DOM.sidebar.classList.remove('open');
+                }
+            },
+
+            handleFeedback(type) {
+                const originalQIndex = AppState.questionOrder[AppState.currentQuestionIndex];
+                console.log(`Feedback for question ${originalQIndex + 1} (Display: ${AppState.currentQuestionIndex + 1}): ${type}`);
+                this.ui.showToast("Cảm ơn phản hồi của bạn!");
+            },
+
+            toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('deepLearningQuizDarkMode', document.body.classList.contains('dark-mode'));
+            },
+            loadDarkModePreference() {
+                if (localStorage.getItem('deepLearningQuizDarkMode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                }
+            },
+
+            setupEventListeners() {
+                DOM.prevQuestionBtnEl.addEventListener('click', () => this.navigate('prev'));
+                DOM.nextQuestionBtnEl.addEventListener('click', () => this.navigate('next'));
+                DOM.flagQuestionBtnEl.addEventListener('click', () => this.toggleFlagCurrentQuestion());
+
+                DOM.restartQuizBtnSidebar.addEventListener('click', () => {
+                    if (confirm("Làm lại sẽ xóa toàn bộ tiến độ. Bạn chắc chắn?")) this.resetStateAndStart();
+                });
+                DOM.restartQuizBtnResultEl.addEventListener('click', () => this.resetStateAndStart());
+                DOM.reviewAnswersBtnEl.addEventListener('click', () => this.startReviewMode());
+
+                DOM.toggleDarkModeBtn.addEventListener('click', () => this.toggleDarkMode());
+                DOM.saveProgressBtnSidebar.addEventListener('click', () => this.saveProgress());
+
+                DOM.explanationContainerEl.querySelectorAll('.feedback-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleFeedback(e.target.dataset.feedback));
+                });
+
+                 DOM.openSidebarBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    DOM.sidebar.classList.toggle('open');
+                    document.body.classList.toggle('sidebar-open', DOM.sidebar.classList.contains('open'));
+                });
+                DOM.quizMainContent.addEventListener('click', () => {
+                    if (window.innerWidth <= 900 && DOM.sidebar.classList.contains('open')) {
+                        DOM.sidebar.classList.remove('open');
+                        document.body.classList.remove('sidebar-open');
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (DOM.resultAreaEl.style.display === 'block' && e.key !== 'Escape') return;
+                     if (questions.length === 0 && e.key !== 'Escape') return;
+
+                    switch (e.key.toLowerCase()) {
+                        case 'arrowleft':
+                        case 'a':
+                            if (!DOM.prevQuestionBtnEl.disabled) this.navigate('prev');
+                            break;
+                        case 'arrowright':
+                        case 'd':
+                             if (!DOM.nextQuestionBtnEl.disabled) this.navigate('next');
+                            break;
+                        case 'f':
+                            if (!AppState.isReviewMode) this.toggleFlagCurrentQuestion();
+                            break;
+                        case '1': case '2': case '3': case '4':
+                            if (!AppState.isReviewMode) {
+                                const optionIdx = parseInt(e.key) - 1;
+                                const currentOriginalQ = AppState.questionOrder[AppState.currentQuestionIndex];
+                                if (questions[currentOriginalQ] && optionIdx < questions[currentOriginalQ].options.length) {
+                                    // if(AppState.answers[currentOriginalQ] === null && AppState.timeLeft > 0) { // timeLeft removed
+                                    if(AppState.answers[currentOriginalQ] === null) {
+                                       this.handleOptionClick(optionIdx);
+                                    }
+                                }
+                            }
+                            break;
+                        case 'escape':
+                            if (DOM.sidebar.classList.contains('open')) {
+                                DOM.sidebar.classList.remove('open');
+                                document.body.classList.remove('sidebar-open');
+                            }
+                            break;
+                    }
+                });
+            },
+
+            utils: {
+                shuffle: (array) => {
+                    let currentIndex = array.length, randomIndex;
+                    while (currentIndex != 0) {
+                        randomIndex = Math.floor(Math.random() * currentIndex);
+                        currentIndex--;
+                        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                    }
+                    return array;
+                },
+                randomInRange: (min, max) => Math.random() * (max - min) + min
+            }
+        };
+
+        QuizApp.init();
+    </script>
+</body>
+</html>

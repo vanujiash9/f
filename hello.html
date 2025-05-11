@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chúc Mừng Tốt Nghiệp Nữ & Như 🎓</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      padding-top: 120px; /* Adjust if header height changes significantly */
+      background: linear-gradient(135deg, #f8e1e9, #d9e4f5);
+      font-family: 'Arial', sans-serif;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Updated Header Styles */
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, #ff6f91, #ff8aa5);
+      padding: 10px 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      position: fixed; /* Changed to fixed for true sticky */
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header h1 {
+      color: white;
+      font-size: 2.0em; /* Slightly smaller to make space for nav */
+      margin: 0 0 10px 0; /* Margin bottom for nav */
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      animation: bounce 2s infinite;
+    }
+    
+    header nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    header nav button {
+      background-color: #fff0f5;
+      color: #ff6f91;
+      border: 1px solid #ffb3c6;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+    }
+
+    header nav button:hover {
+      background-color: #ff6f91;
+      color: white;
+      transform: translateY(-2px);
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); } /* Reduced bounce for smaller title */
+    }
+    
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      /* margin-top: 20px; Removed as body padding-top handles this */
+      margin-bottom: 20px;
+      display: flex; /* Default state, JS will hide it if needed */
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .section {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in-out;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .intro-video {
+      width: 100%;
+      max-width: 800px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      margin: 20px 0;
+    }
+    
+    .progress-container {
+      width: 90%;
+      max-width: 600px;
+      height: 8px;
+      background-color: #f0f0f0;
+      border-radius: 10px;
+      margin: 20px 0;
+      overflow: hidden;
+      display: block; /* Default state, JS will hide it if needed */
+    }
+    
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff6f91, #ff9e9e);
+      transition: width 0.5s ease;
+    }
+    
+    .game-title {
+      color: #ff6f91;
+      font-size: 1.8em;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .game-description {
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+    }
+    
+    #quiz-container {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .question {
+      font-size: 1.3em;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .option {
+      padding: 12px 15px;
+      background: #f8f8f8;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1.1em;
+    }
+    
+    .option:hover {
+      background: #fff0f5;
+      border-color: #ffb3c6;
+    }
+    
+    .option.selected {
+      background: #ffb3c6;
+      border-color: #ff6f91;
+      color: #333;
+    }
+    
+    .option.correct {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+    
+    .option.incorrect {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+    
+    .memory-game {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 500px;
+    }
+    
+    .memory-card {
+      aspect-ratio: 1/1;
+      background: #ff8aa5;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+      position: relative;
+    }
+    
+    .memory-card.flipped {
+      transform: rotateY(180deg);
+    }
+    
+    .memory-card-front, .memory-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .memory-card-front {
+      background: linear-gradient(135deg, #ff8aa5, #ff6f91);
+      font-size: 1.5em;
+      color: white;
+    }
+    
+    .memory-card-back {
+      background: white;
+      transform: rotateY(180deg);
+      font-size: 2em;
+      color: #ff6f91;
+    }
+    
+    #puzzle-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #ff6f91;
+      font-size: 1.5em;
+      padding: 20px;
+      width: 100%;
+    }
+    
+    #puzzle-container {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 5px;
+      background: #fff0f5;
+      padding: 10px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
+      z-index: 10;
+      margin: 15px 0;
+    }
+    
+    .puzzle-piece {
+      width: 100px;
+      height: 100px;
+      background-size: 300px 300px;
+      cursor: move;
+      border-radius: 5px;
+      border: 2px solid #ff6f91;
+      touch-action: none;
+      transition: transform 0.2s;
+    }
+    
+    .puzzle-piece:hover {
+      transform: scale(1.05);
+    }
+    
+    #timer {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: #ff6f91;
+      font-weight: bold;
+    }
+    
+    .button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      background: #ff6f91;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    
+    .button:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    #skip-button {
+      opacity: 0.7;
+    }
+    
+    #hint-image {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 20;
+    }
+    
+    #memory-frame {
+      display: none;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 20px 0;
+    }
+    
+    #memory-frame.visible {
+      display: flex;
+    }
+    
+    .memory-img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 15px;
+      border: 3px solid #ff6f91;
+      transition: transform 0.3s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .memory-img:hover {
+      transform: scale(1.1);
+    }
+    
+    .card-container {
+      display: none;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 1200px;
+      margin-bottom: 70px; /* Space for audio controls */
+    }
+    
+    .card-container.visible {
+      display: flex;
+      animation: fadeIn 1s ease-in-out;
+    }
+    
+    .card {
+      width: 300px;
+      height: 400px;
+      perspective: 1000px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card:hover .card-inner {
+      transform: rotateY(180deg);
+    }
+    
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    .card-front {
+      background: linear-gradient(135deg, #fff0f5, #ffebf3);
+      color: #ff6f91;
+      text-align: center;
+    }
+    
+    .card-back {
+      background: linear-gradient(135deg, #ffe4e1, #ffd1c9);
+      color: #333;
+      transform: rotateY(180deg);
+      text-align: center;
+      font-size: 1.1em;
+      line-height: 1.5;
+    }
+    
+    .card-front img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 3px solid #ff6f91;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-front h2 {
+      font-size: 1.8em;
+      margin: 10px 0;
+      color: #ff6f91;
+    }
+    
+    .card-front p {
+      font-size: 1.2em;
+      color: #ff8aa5;
+    }
+    
+    .card-back p {
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+    
+    .audio-controls {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 8px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+    }
+    
+    .audio-controls button {
+      background: #ff6f91;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      transition: all 0.3s ease;
+    }
+    
+    .audio-controls button:hover {
+      background: #ff4d79;
+      transform: scale(1.1);
+    }
+    
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -2;
+    }
+    
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* For password screen when it's standalone */
+    #password-screen-container {
+        width: 90%;
+        max-width: 600px;
+        margin: 30px auto; /* Will be centered because body is flex */
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        display: none; /* Initially hidden */
+    }
+    
+    @media (max-width: 768px) {
+      body { padding-top: 110px; } /* Adjust for potentially smaller header */
+      header h1 { font-size: 1.8em; }
+      header nav button { padding: 6px 10px; font-size: 0.8em; }
+      .game-title { font-size: 1.5em; }
+      .card { width: 280px; height: 380px; }
+      .card-front h2 { font-size: 1.5em; }
+      .card-back { font-size: 1em; }
+      .memory-img { width: 150px; height: 150px; }
+    }
+    
+    @media (max-width: 600px) {
+      body { padding-top: 130px; } /* Header might wrap nav buttons, needing more space */
+      header h1 { font-size: 1.6em; }
+      header nav button { padding: 5px 8px; font-size: 0.75em; }
+      .game-title { font-size: 1.3em; }
+      .card { width: 90%; max-width: 250px; height: auto; min-height: 350px; }
+      .card-front h2 { font-size: 1.4em; }
+      .memory-img { width: 120px; height: 120px; }
+      #puzzle-container { grid-template-columns: repeat(3, 80px); }
+      .puzzle-piece { width: 80px; height: 80px; background-size: 240px 240px; }
+      #hint-image { width: 240px; height: 240px; }
+      .audio-controls { bottom: 10px; right: 10px; }
+      .memory-game { grid-template-columns: repeat(3, 1fr); max-width: 350px; }
+      .intro-video { height: auto; }
+      .button { padding: 10px 18px; font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Chúc Mừng Tốt Nghiệp Nữ & Như 🎉</h1>
+    <nav>
+      <button data-target="video">🎬 Giới Thiệu</button>
+      <button data-target="quiz">🧠 Trắc Nghiệm</button>
+      <button data-target="memory">🤔 Trí Nhớ</button>
+      <button data-target="puzzle">🧩 Ghép Hình</button>
+      <button data-target="cards">💌 Thiệp Mừng</button>
+    </nav>
+  </header>
+  
+  <div class="container"> <!-- This container holds the game sections -->
+    <!-- Section 1: Intro Video -->
+    <div class="section active" id="section-video">
+      <h2 class="game-title">Chào mừng đến với Lễ Chúc Mừng Tốt Nghiệp! 🎓</h2>
+      <p class="game-description">Hãy xem video này trước khi bắt đầu hành trình!</p>
+      <video class="intro-video" controls>
+        <source src="./Nữ/video.mp4" type="video/mp4">
+        Trình duyệt của bạn không hỗ trợ video.
+      </video>
+      <button class="button" id="video-complete-btn">Xem xong rồi! Tiếp tục</button>
+    </div>
+    
+    <!-- Section 2: Quiz Game -->
+    <div class="section" id="section-quiz">
+      <h2 class="game-title">Trắc Nghiệm Về Nữ & Như</h2>
+      <p class="game-description">Hãy trả lời các câu hỏi để mở khóa phần tiếp theo!</p>
+      <div id="quiz-container">
+        <div id="question" class="question">Câu hỏi sẽ xuất hiện ở đây</div>
+        <div id="options" class="options"></div>
+        <button class="button" id="next-question" style="display: none;">Câu tiếp theo</button>
+        <div id="quiz-result" style="display: none; margin-top: 15px; font-weight: bold;"></div>
+      </div>
+    </div>
+    
+    <!-- Section 3: Memory Game -->
+    <div class="section" id="section-memory">
+      <h2 class="game-title">Trò Chơi Trí Nhớ</h2>
+      <p class="game-description">Hãy tìm các cặp thẻ giống nhau để mở khóa phần tiếp theo!</p>
+      <div class="memory-game"></div>
+      <div id="memory-score" style="margin-top: 15px; font-weight: bold; color: #ff6f91;">Số cặp đã tìm thấy: 0/8</div>
+    </div>
+    
+    <!-- Section 4: Puzzle Game -->
+    <div class="section" id="section-puzzle">
+      <h2 class="game-title">Hoàn Thành Ghép Hình</h2>
+      <p class="game-description">Ghép hình tốt nghiệp trong 60 giây để mở thiệp!</p>
+      <div id="puzzle-container"></div>
+      <p id="timer">Thời gian: 60s</p>
+      <div class="button-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <button id="hint-button" class="button">Gợi ý bí mật</button>
+        <button id="retry-button" class="button" style="display: none;">Thử lại</button>
+        <button id="skip-button" class="button" style="display: none;">Bỏ qua</button>
+      </div>
+      <img id="hint-image" src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Hint">
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div> 
+
+  <!-- Password Screen Container (Separate from .container) -->
+  <div id="password-screen-container">
+    {/* Content will be injected by showPasswordScreen() */}
+  </div>
+  
+  <!-- Memory Photos Display (Separate from .container) -->
+  <div id="memory-frame">
+    <img class="memory-img" src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Kỷ niệm 1">
+    <img class="memory-img" src="https://images.unsplash.com/photo-1511949896808-b1940e0c08eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Kỷ niệm 2">
+    <img class="memory-img" src="https://images.unsplash.com/photo-1585435465945-bef5a93d1df8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Kỷ niệm 3">
+    <img class="memory-img" src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Kỷ niệm 4">
+  </div>
+  
+  <!-- Greeting Cards (Separate from .container) -->
+  <div class="card-container">
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1585435465945-bef5a93d1df8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Nữ</h2>
+          <p>Từ Vân</p>
+        </div>
+        <div class="card-back">
+          <p>🎓 Gửi Nữ 💐... (Nội dung lời chúc)</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1585435465945-bef5a93d1df8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Như</h2>
+          <p>Từ Vân</p>
+        </div>
+        <div class="card-back">
+          <p>🎓 Gửi Như 🌼... (Nội dung lời chúc)</p>
+        </div>
+      </div>
+    </div>
+    {/* More cards ... */}
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Nữ</h2>
+          <p>Từ Nhân</p>
+        </div>
+        <div class="card-back">
+          <p>Nữ ơi, bạn đã làm được rồi! Chúc mừng tốt nghiệp FPT Polytechnic! 🎓 Mong bạn luôn rực rỡ và hạnh phúc! Nhân 😊</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Như</h2>
+          <p>Từ Nhân</p>
+        </div>
+        <div class="card-back">
+          <p>Như tuyệt vời, chúc mừng bạn đã tốt nghiệp! 🎉 FPT Polytechnic là khởi đầu, tương lai rộng mở đang chờ bạn! Nhân 💪</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1511949896808-b1940e0c08eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Nữ</h2>
+          <p>Từ Thi</p>
+        </div>
+        <div class="card-back">
+          <p>Nữ thân yêu, chúc mừng bạn đã tốt nghiệp FPT Polytechnic! 🎓 Hãy tiếp tục ước mơ và bay cao nhé! Thi 💖</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="https://images.unsplash.com/photo-1511949896808-b1940e0c08eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Graduation">
+          <h2>Chúc Như</h2>
+          <p>Từ Thi</p>
+        </div>
+        <div class="card-back">
+          <p>Như ơi, chúc mừng bạn đã hoàn thành xuất sắc tại FPT Polytechnic! 🎉 Tương lai là của bạn, tỏa sáng nhé! Thi 😍</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="audio-controls">
+    <button id="play-button">▶</button>
+    <button id="pause-button">❚❚</button>
+  </div>
+  
+  <audio id="background-music" loop>
+    <source src="./y2mate.com - 잘 지내.mp3" type="audio/mpeg">
+    Trình duyệt của bạn không hỗ trợ âm thanh.
+  </audio>
+  
+  <canvas id="confetti"></canvas>
+  
+  <script>
+    // Global variables
+    const sections = document.querySelectorAll('.section'); // Game sections within .container
+    const progressBar = document.getElementById('progress-bar');
+    let currentSection = 0; // Index for game sections
+    const totalSections = sections.length; // Should be 4
+    
+    const gameContainer = document.querySelector('.container');
+    const progressContainer = document.querySelector('.progress-container');
+    const passwordScreenContainer = document.getElementById('password-screen-container');
+    const memoryFrame = document.getElementById('memory-frame');
+    const cardContainer = document.querySelector('.card-container');
+    let confettiAnimationFrameId;
+
+
+    // Show current game section and update progress
+    function showSection(index) {
+      sections.forEach((section, i) => {
+        section.classList.toggle('active', i === index);
+      });
+      const progress = ((index + 1) / totalSections) * 100;
+      progressBar.style.width = `${Math.min(progress, 100)}%`;
+    }
+
+    function hideAllMajorContent() {
+        gameContainer.style.display = 'none';
+        progressContainer.style.display = 'none';
+        passwordScreenContainer.style.display = 'none';
+        memoryFrame.style.display = 'none';
+        memoryFrame.classList.remove('visible');
+        cardContainer.style.display = 'none';
+        cardContainer.classList.remove('visible');
+
+        // Stop confetti
+        if (confettiAnimationFrameId) {
+            cancelAnimationFrame(confettiAnimationFrameId);
+            confettiAnimationFrameId = null;
+        }
+        const confettiCanvas = document.getElementById('confetti');
+        if (confettiCanvas) {
+            const ctx = confettiCanvas.getContext('2d');
+            ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+        // Stop puzzle timer if active
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+    }
+
+    function navigateTo(pageId) {
+        hideAllMajorContent();
+
+        if (pageId === 'video') {
+            currentSection = 0;
+            gameContainer.style.display = 'flex';
+            progressContainer.style.display = 'block';
+            showSection(currentSection);
+        } else if (pageId === 'quiz') {
+            currentSection = 1;
+            gameContainer.style.display = 'flex';
+            progressContainer.style.display = 'block';
+            showSection(currentSection);
+            initQuiz();
+        } else if (pageId === 'memory') {
+            currentSection = 2;
+            gameContainer.style.display = 'flex';
+            progressContainer.style.display = 'block';
+            showSection(currentSection);
+            initMemoryGame();
+        } else if (pageId === 'puzzle') {
+            currentSection = 3;
+            gameContainer.style.display = 'flex';
+            progressContainer.style.display = 'block';
+            showSection(currentSection);
+            initPuzzle(); // Resets puzzle pieces
+            startTimer(); // Starts new timer
+        } else if (pageId === 'cards') {
+            showPasswordScreen(); // This will display passwordScreenContainer
+        }
+    }
+
+    // Add event listeners to header navigation
+    document.querySelectorAll('header nav button').forEach(button => {
+        button.addEventListener('click', () => {
+            navigateTo(button.dataset.target);
+        });
+    });
+    
+    // Video Section
+    const videoCompleteBtn = document.getElementById('video-complete-btn');
+    videoCompleteBtn.addEventListener('click', () => {
+        // Navigate to quiz (next logical step in original flow)
+        navigateTo('quiz');
+    });
+    
+    // Quiz Game
+    const quizContainer = document.getElementById('quiz-container');
+    const questionElement = document.getElementById('question');
+    const optionsContainer = document.getElementById('options');
+    const nextButton = document.getElementById('next-question');
+    const quizResult = document.getElementById('quiz-result');
+    
+    const questions = [
+      { question: "Nữ và Như tốt nghiệp ngành gì?", options: ["Công nghệ thông tin", "Logistic", "Quản trị kinh doanh", "Marketing"], correct: 1 },
+      { question: "Nữ và Như đã học mấy năm tại FPT Polytechnic?", options: ["1 năm", "2.5 năm", "3.5 năm", "4 năm"], correct: 1 },
+      { question: "Đám cưới của tụi tui 2 bạn đi bao nhiêu củ", options: ["10 củ nka", "chắc 1 cây mới đủ", "10 chỉ", "20 củ"], correct: 2 }
+    ];
+    let currentQuestion = 0;
+    let score = 0;
+    
+    function initQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      quizResult.style.display = 'none'; // Hide result from previous attempt
+      nextButton.style.display = 'none'; // Hide next button
+      // Ensure quiz container is reset for new questions, not just appending old buttons
+      quizContainer.innerHTML = ` 
+        <div id="question" class="question">Câu hỏi sẽ xuất hiện ở đây</div>
+        <div id="options" class="options"></div>
+        <button class="button" id="next-question" style="display: none;">Câu tiếp theo</button>
+        <div id="quiz-result" style="display: none; margin-top: 15px; font-weight: bold;"></div>
+      `;
+      // Re-assign elements after innerHTML change
+      document.getElementById('next-question').addEventListener('click', () => {
+        currentQuestion++;
+        showQuizQuestion();
+      });
+      showQuizQuestion();
+    }
+    
+    function showQuizQuestion() {
+      const qElement = quizContainer.querySelector('#question'); // Use querySelector on quizContainer
+      const optsContainer = quizContainer.querySelector('#options');
+      const nxtButton = quizContainer.querySelector('#next-question');
+      const qResult = quizContainer.querySelector('#quiz-result');
+
+      const q = questions[currentQuestion];
+      qElement.textContent = q.question;
+      
+      optsContainer.innerHTML = '';
+      q.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.classList.add('option');
+        optionElement.textContent = option;
+        optionElement.dataset.index = index;
+        optionElement.addEventListener('click', checkAnswer);
+        optsContainer.appendChild(optionElement);
+      });
+      
+      nxtButton.style.display = 'none';
+      qResult.style.display = 'none';
+    }
+    
+    function checkAnswer(e) {
+      const selectedOption = e.target;
+      const selectedAnswer = parseInt(selectedOption.dataset.index);
+      const correctAnswer = questions[currentQuestion].correct;
+      
+      const optsContainer = quizContainer.querySelector('#options');
+      const nxtButton = quizContainer.querySelector('#next-question');
+      const qResult = quizContainer.querySelector('#quiz-result');
+
+      optsContainer.querySelectorAll('.option').forEach(option => {
+        option.removeEventListener('click', checkAnswer);
+        option.style.cursor = 'default';
+      });
+      
+      if (selectedAnswer === correctAnswer) {
+        selectedOption.classList.add('correct');
+        qResult.textContent = 'Đúng rồi! +1 điểm';
+        qResult.style.color = '#28a745';
+        score++;
+      } else {
+        selectedOption.classList.add('incorrect');
+        optsContainer.querySelectorAll('.option')[correctAnswer].classList.add('correct');
+        qResult.textContent = 'Sai rồi!';
+        qResult.style.color = '#dc3545';
+      }
+      
+      qResult.style.display = 'block';
+      
+      if (currentQuestion < questions.length - 1) {
+        nxtButton.style.display = 'block';
+      } else {
+        setTimeout(() => {
+          quizContainer.innerHTML = `
+            <h2 style="color: #ff6f91; text-align: center;">Kết Quả Trắc Nghiệm</h2>
+            <p style="font-size: 1.2em; text-align: center;">Bạn đã trả lời đúng ${score}/${questions.length} câu hỏi!</p>
+            <button class="button" id="continue-after-quiz">Tiếp tục hành trình!</button>
+          `;
+          quizContainer.querySelector('#continue-after-quiz').addEventListener('click', () => {
+            navigateTo('memory'); // Original flow continues to memory game
+          });
+        }, 1500);
+      }
+    }
+    
+    // Memory Game
+    const memoryGameEl = document.querySelector('.memory-game');
+    const memoryScoreEl = document.getElementById('memory-score');
+    const totalMemoryPairs = 8;
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let canFlip = true;
+    
+    function initMemoryGame() {
+      memoryGameEl.innerHTML = '';
+      matchedPairs = 0;
+      memoryScoreEl.textContent = `Số cặp đã tìm thấy: 0/${totalMemoryPairs}`;
+      flippedCards = [];
+      canFlip = true;
+
+      const emojis = ['🎓', '🎉', '🎊', '💖', '✨', '🌟', '📚', '🎯'];
+      const allCardsData = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      
+      allCardsData.forEach((emoji) => {
+        const card = document.createElement('div');
+        card.classList.add('memory-card');
+        card.dataset.value = emoji;
+        
+        const front = document.createElement('div'); front.classList.add('memory-card-front'); front.textContent = '?';
+        const back = document.createElement('div'); back.classList.add('memory-card-back'); back.textContent = emoji;
+        
+        card.appendChild(front); card.appendChild(back);
+        card.addEventListener('click', handleMemoryCardFlip);
+        memoryGameEl.appendChild(card);
+      });
+    }
+    
+    function handleMemoryCardFlip() {
+      if (!canFlip || this.classList.contains('flipped') || flippedCards.includes(this)) return;
+      
+      this.classList.add('flipped');
+      flippedCards.push(this);
+      
+      if (flippedCards.length === 2) {
+        canFlip = false;
+        checkForMemoryMatch();
+      }
+    }
+    
+    function checkForMemoryMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.dataset.value === card2.dataset.value) {
+        flippedCards = []; canFlip = true; matchedPairs++;
+        memoryScoreEl.textContent = `Số cặp đã tìm thấy: ${matchedPairs}/${totalMemoryPairs}`;
+        if (matchedPairs === totalMemoryPairs) {
+          setTimeout(() => {
+            const memSection = document.getElementById('section-memory');
+            memSection.innerHTML = `
+              <h2 class="game-title">Tuyệt vời!</h2>
+              <p class="game-description">Bạn đã tìm thấy tất cả các cặp!</p>
+              <button class="button" id="continue-after-memory">Tiếp tục hành trình!</button>
+            `;
+            memSection.querySelector('#continue-after-memory').addEventListener('click', () => {
+              navigateTo('puzzle'); // Original flow continues to puzzle
+            });
+          }, 1000);
+        }
+      } else {
+        setTimeout(() => {
+          card1.classList.remove('flipped'); card2.classList.remove('flipped');
+          flippedCards = []; canFlip = true;
+        }, 1000);
+      }
+    }
+    
+    // Puzzle game logic
+    const puzzleContainerEl = document.getElementById('puzzle-container');
+    const timerElement = document.getElementById('timer');
+    const hintButton = document.getElementById('hint-button');
+    const retryButton = document.getElementById('retry-button');
+    const skipButtonEl = document.getElementById('skip-button'); // Renamed to avoid conflict
+    const hintImage = document.getElementById('hint-image');
+    const imageUrl = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80';
+    
+    let puzzlePieces = [];
+    let timeLeft = 60;
+    let puzzleGameActive = true; // Renamed to avoid conflict
+    let skipAttempts = 0;
+    let timerInterval;
+
+    function initPuzzle() {
+      puzzlePieces = [];
+      puzzleContainerEl.innerHTML = '';
+      puzzleGameActive = true; // Reset game active state
+      retryButton.style.display = 'none';
+      skipButtonEl.style.display = 'none';
+      timerElement.style.color = '#ff6f91'; // Reset timer color
+
+      const correctPieceData = [
+        { id: 0, x: 0, y: 0 }, { id: 1, x: -100, y: 0 }, { id: 2, x: -200, y: 0 },
+        { id: 3, x: 0, y: -100 }, { id: 4, x: -100, y: -100 }, { id: 5, x: -200, y: -100 },
+        { id: 6, x: 0, y: -200 }, { id: 7, x: -100, y: -200 }, { id: 8, x: -200, y: -200 }
+      ];
+      let shuffledOrder = [...correctPieceData].sort(() => Math.random() - 0.5);
+      
+      shuffledOrder.forEach((data) => {
+        const piece = document.createElement('div');
+        piece.className = 'puzzle-piece';
+        piece.style.backgroundImage = `url(${imageUrl})`;
+        piece.style.backgroundPosition = `${data.x}px ${data.y}px`;
+        piece.dataset.correctId = data.id;
+        piece.draggable = true;
+        puzzleContainerEl.appendChild(piece);
+        puzzlePieces.push(piece);
+      });
+
+      let draggedPiece = null;
+      puzzlePieces.forEach(piece => {
+        piece.addEventListener('dragstart', (e) => {
+          if (!puzzleGameActive) { e.preventDefault(); return; }
+          draggedPiece = piece;
+          setTimeout(() => piece.style.opacity = '0.5', 0);
+        });
+        piece.addEventListener('dragend', () => {
+          if(draggedPiece) draggedPiece.style.opacity = '1';
+          draggedPiece = null;
+        });
+        piece.addEventListener('dragover', (e) => {
+          if (!puzzleGameActive) return;
+          e.preventDefault();
+        });
+        piece.addEventListener('drop', (e) => {
+          if (!puzzleGameActive || !draggedPiece || piece === draggedPiece) return;
+          e.preventDefault();
+          const draggedIndex = puzzlePieces.indexOf(draggedPiece);
+          const targetIndex = puzzlePieces.indexOf(piece);
+
+          // Swap in DOM: More robust to reorder in parent
+          const parent = puzzleContainerEl;
+          const draggedNext = draggedPiece.nextSibling;
+          const pieceNext = piece.nextSibling;
+
+          if (draggedIndex < targetIndex) {
+            parent.insertBefore(draggedPiece, pieceNext);
+            parent.insertBefore(piece, draggedPiece);
+          } else {
+            parent.insertBefore(piece, draggedNext);
+            parent.insertBefore(draggedPiece, piece);
+          }
+          // Update puzzlePieces array after DOM manipulation
+          puzzlePieces = Array.from(parent.querySelectorAll('.puzzle-piece'));
+          checkPuzzleWin();
+        });
+      });
+    }
+
+    function checkPuzzleWin() {
+      if (!puzzleGameActive) return;
+      const currentPiecesInGrid = Array.from(puzzleContainerEl.querySelectorAll('.puzzle-piece'));
+      const isCorrect = currentPiecesInGrid.every((p, index) => parseInt(p.dataset.correctId) === index);
+      
+      if (isCorrect) {
+        puzzleGameActive = false;
+        clearInterval(timerInterval);
+        const puzzleSect = document.getElementById('section-puzzle');
+        puzzleSect.innerHTML = `
+          <h2 class="game-title">Tuyệt vời!</h2>
+          <p class="game-description">Bạn đã hoàn thành ghép hình!</p>
+          <button class="button" id="continue-after-puzzle">Mở thiệp chúc mừng!</button>
+        `;
+        puzzleSect.querySelector('#continue-after-puzzle').addEventListener('click', () => {
+          navigateTo('cards'); // Original flow: puzzle -> password/cards
+        });
+      }
+    }
+    
+    function showPasswordScreen() {
+      hideAllMajorContent(); // Ensure other main views are hidden
+      passwordScreenContainer.style.display = 'block'; // Show the password container
+
+      passwordScreenContainer.innerHTML = `
+        <div class="section active" id="section-password" style="width:100%; margin-bottom:0; background: transparent; box-shadow:none;">
+          <h2 class="game-title">Nhập mật khẩu để mở thiệp</h2>
+          <p class="game-description">Bạn là Nữ hay Như?</p>
+          <div style="display: flex; gap: 15px; margin: 20px 0; justify-content: center;">
+            <button class="button" id="select-nu">Mình là Nữ</button>
+            <button class="button" id="select-nhu">Mình là Như</button>
+          </div>
+          <div id="password-form" style="display: none; width: 100%; max-width: 400px; margin: 0 auto;">
+            <p class="game-description" id="password-prompt"></p>
+            <input type="password" id="password-input" placeholder="Nhập mật khẩu..." 
+              style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #ff6f91; margin: 10px 0; font-size: 1em; box-sizing: border-box;">
+            <button class="button" id="verify-password">Xác nhận</button>
+            <p id="password-error" style="color: #dc3545; display: none; margin-top: 10px;">Mật khẩu không đúng, hãy thử lại!</p>
+          </div>
+        </div>
+      `;
+      
+      passwordScreenContainer.querySelector('#select-nu').addEventListener('click', () => {
+        const form = passwordScreenContainer.querySelector('#password-form');
+        form.style.display = 'block';
+        form.querySelector('#password-prompt').textContent = 'Nữ ơi, hãy nhập mật khẩu:';
+        form.querySelector('#password-input').value = '';
+        form.querySelector('#password-input').dataset.student = 'nu';
+        form.querySelector('#password-input').focus();
+      });
+      passwordScreenContainer.querySelector('#select-nhu').addEventListener('click', () => {
+        const form = passwordScreenContainer.querySelector('#password-form');
+        form.style.display = 'block';
+        form.querySelector('#password-prompt').textContent = 'Như ơi, hãy nhập mật khẩu:';
+        form.querySelector('#password-input').value = '';
+        form.querySelector('#password-input').dataset.student = 'nhu';
+        form.querySelector('#password-input').focus();
+      });
+      
+      const verifyBtn = passwordScreenContainer.querySelector('#verify-password');
+      const passInput = passwordScreenContainer.querySelector('#password-input');
+      verifyBtn.addEventListener('click', verifyPassword);
+      passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyPassword(); });
+    }
+    
+    function verifyPassword() {
+      const passwordInput = passwordScreenContainer.querySelector('#password-input');
+      const student = passwordInput.dataset.student;
+      const password = passwordInput.value.trim();
+      const errorElement = passwordScreenContainer.querySelector('#password-error');
+      errorElement.style.display = 'none';
+
+      let isCorrect = false;
+      if (student === 'nu' && password === 'hihidongok') isCorrect = true;
+      else if (student === 'nhu' && password === 'leuleumayhaha') isCorrect = true;
+      
+      if (isCorrect) {
+        passwordScreenContainer.style.display = 'none';
+        showFinalContent(student);
+      } else {
+        errorElement.style.display = 'block';
+        passwordInput.focus(); passwordInput.select();
+      }
+    }
+    
+    function showFinalContent(student) {
+      hideAllMajorContent(); // Ensure other main views are hidden
+      createConfetti();
+      
+      memoryFrame.style.display = 'flex'; // Show memory frame
+      memoryFrame.classList.add('visible');
+      
+      setTimeout(() => {
+        memoryFrame.style.display = 'none';
+        memoryFrame.classList.remove('visible');
+        
+        cardContainer.style.display = 'flex'; // Show card container
+        cardContainer.classList.add('visible');
+        cardContainer.querySelectorAll('.card').forEach(card => {
+          const cardTitle = card.querySelector('.card-front h2').textContent;
+          card.style.display = ((student === 'nu' && cardTitle.includes('Nữ')) || (student === 'nhu' && cardTitle.includes('Như'))) ? 'block' : 'none';
+        });
+      }, 4000);
+    }
+
+    function startTimer() {
+      timeLeft = 60;
+      puzzleGameActive = true;
+      timerElement.textContent = `Thời gian: ${timeLeft}s`;
+      timerElement.style.color = '#ff6f91';
+      retryButton.style.display = 'none';
+      skipButtonEl.style.display = 'none';
+      puzzlePieces.forEach(p => p.draggable = true);
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!puzzleGameActive) { clearInterval(timerInterval); return; }
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval); puzzleGameActive = false;
+          timerElement.textContent = 'Hết thời gian!';
+          retryButton.style.display = 'inline-block';
+          skipButtonEl.style.display = 'inline-block';
+          puzzlePieces.forEach(p => p.draggable = false);
+        } else {
+          timeLeft--; timerElement.textContent = `Thời gian: ${timeLeft}s`;
+          if (timeLeft <= 10) timerElement.style.color = timeLeft % 2 === 0 ? '#ff0000' : '#ff6f91';
+        }
+      }, 1000);
+    }
+
+    retryButton.addEventListener('click', () => {
+      initPuzzle(); startTimer();
+    });
+
+    skipButtonEl.addEventListener('click', () => {
+      skipAttempts++;
+      if (skipAttempts === 1) alert('Hihi, cố lên chút nữa đi! 😜');
+      else if (skipAttempts >=2) {
+        puzzleGameActive = false; clearInterval(timerInterval);
+        const puzzleSect = document.getElementById('section-puzzle');
+        puzzleSect.innerHTML = `
+          <h2 class="game-title">Đã bỏ qua!</h2>
+          <p class="game-description" style="color: #ff4d79; font-style: italic; font-weight: bold;">Không sao, phần này hơi khó! Lêu lêu 😜</p>
+          <button class="button" id="continue-after-puzzle-skip">Mở thiệp chúc mừng!</button>
+        `;
+        puzzleSect.querySelector('#continue-after-puzzle-skip').addEventListener('click', () => {
+            navigateTo('cards'); // Skip puzzle -> password/cards
+        });
+      }
+    });
+
+    hintButton.addEventListener('click', () => {
+      hintImage.style.display = 'block';
+      setTimeout(() => { hintImage.style.display = 'none'; }, 2000);
+    });
+    
+    // Audio controls
+    const backgroundMusic = document.getElementById('background-music');
+    const playButton = document.getElementById('play-button');
+    const pauseButton = document.getElementById('pause-button');
+    playButton.addEventListener('click', () => backgroundMusic.play().catch(e => console.log("Audio play failed:", e)));
+    pauseButton.addEventListener('click', () => backgroundMusic.pause());
+
+    function createConfetti() {
+      const canvas = document.getElementById('confetti');
+      if (!canvas) return;
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const confettiPcs = []; const numPcs = 200;
+      const colors = ['#ff6f91', '#ffb3c6', '#ff8e71', '#ffd670', '#e9ff70', '#89cff0', '#afcdea'];
+      
+      for (let i = 0; i < numPcs; i++) {
+        confettiPcs.push({
+          x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 5, color: colors[Math.floor(Math.random() * colors.length)],
+          speed: Math.random() * 3 + 2, angle: Math.random() * Math.PI * 2,
+          spin: (Math.random() - 0.5) * 0.1, flutter: Math.random() * 2 + 1,
+          opacity: 1, life: Math.random() * 200 + 100
+        });
+      }
+      
+      function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activePcs = false;
+        confettiPcs.forEach(p => {
+          if (p.opacity <= 0 || p.life <=0) return;
+          activePcs = true; p.y += p.speed + Math.sin(p.angle * 0.1) * 0.5;
+          p.x += Math.sin(p.angle) * p.flutter; p.angle += p.spin; p.life--;
+          if (p.y > canvas.height + p.size) p.opacity = 0;
+          ctx.save(); ctx.translate(p.x + p.size / 2, p.y + p.size / 2); ctx.rotate(p.angle);
+          ctx.fillStyle = p.color; ctx.globalAlpha = p.opacity;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * (Math.random()*0.5 + 0.5));
+          ctx.restore();
+        });
+        if (activePcs) confettiAnimationFrameId = requestAnimationFrame(animateConfetti);
+        else { confettiAnimationFrameId = null; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+      }
+      if (confettiAnimationFrameId) cancelAnimationFrame(confettiAnimationFrameId);
+      animateConfetti();
+    }
+    
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('confetti');
+      if (canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    });
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      navigateTo('video'); // Start with the video section by default
+      backgroundMusic.volume = 0.3;
+      backgroundMusic.play().catch(e => console.log("Autoplay prevented:", e));
+    });
+  </script>
+</body>
+</html>
