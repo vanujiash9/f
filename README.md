@@ -101,10 +101,3 @@ Copy code
 
 ---
 
-📌 **Điểm chính:**  
-- Không còn icon gây rối.  
-- Các bảng & mối quan hệ cân đối, trình bày theo nhóm rõ ràng.  
-- Có cột "Ý nghĩa" giải thích từng bảng cho FE.  
-- Thêm thông tin liên hệ BE ở cuối.  
-
-Bạn có muốn mình **vẽ luôn file ERD thực tế (PNG hoặc SVG)** dựa trên tài liệu này để bạn đưa vào thư mục 
