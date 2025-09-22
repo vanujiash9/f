@@ -3,7 +3,7 @@
 
 # 📖 Tài liệu Schema CSDL `dia_talents`
 
-📌 **Link ERD đầy đủ**: *(đính kèm hình hoặc link ERD khi có)*
+📌 **Link ERD đầy đủ**: *(https://app.diagrams.net/#G1n7Zks6sgTrmF44OYYt7ZP1M7OOjP8V2k#%7B%22pageId%22%3A%22loPtsfd67OOyYVl8gUGj%22%7D)*
 
 ---
 
