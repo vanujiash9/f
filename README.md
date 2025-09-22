@@ -1,140 +1,193 @@
-Chắc chắn rồi. Tôi đã hiểu, bạn muốn tôi tái tạo lại file README.md đã được trang trí đẹp mắt trước đó, nhưng lần này phải đầy đủ và chính xác 100% theo toàn bộ schema bạn vừa cung cấp.
 
-Dưới đây là phiên bản hoàn chỉnh, được thiết kế dành riêng cho team Frontend, với đầy đủ các bảng, nhóm logic, và các ghi chú chi tiết.
 
-📖 Hệ thống dia_talents - Tài liệu Schema cho Frontend
+Tài liệu Schema Cơ sở dữ liệu dia_talents
+Giới thiệu
 
-Chào mừng team Frontend!
+Tài liệu này cung cấp một cái nhìn tổng quan chi tiết và đầy đủ về cấu trúc cơ sở dữ liệu dia_talents. Mục tiêu là diễn giải schema từ góc độ của Backend để team Frontend có thể hiểu rõ các mô hình dữ liệu, các trường thông tin quan trọng và mối quan hệ giữa chúng khi làm việc với API.
 
-Tài liệu này là cầu nối giữa Backend và Frontend. Thay vì nhìn vào cấu trúc SQL khô khan, chúng tôi đã diễn giải cơ sở dữ liệu thành các "Đối tượng" (Objects) mà các bạn sẽ nhận được qua API. Hãy xem đây là "kim chỉ nam" về dữ liệu để xây dựng các component và quản lý state hiệu quả.
+Nguyên tắc dành cho Frontend
 
-💡 Nguyên tắc vàng cho FE: Mọi thứ đều xoay quanh ID. Bạn sẽ dùng ID của một đối tượng (ví dụ: applicant_id) để truy vấn thông tin chi tiết hoặc thực hiện các hành động liên quan đến nó.
+ID là định danh chính: Mọi đối tượng chính (ứng viên, công ty, công việc) đều có một ID duy nhất. Đây là khóa chính để thực hiện các lời gọi API chi tiết (GET /api/object/{id}).
 
-👤 Lõi: Ứng viên & Người dùng (Applicant & User Core)
+Dữ liệu lồng nhau: API sẽ trả về các đối tượng đã được kết hợp sẵn. Ví dụ, khi gọi API lấy chi tiết một ứng viên, bạn sẽ nhận được cả thông tin profile và danh sách kỹ năng của họ trong cùng một response.
 
-Đây là nhóm thực thể quan trọng nhất, đại diện cho người dùng cuối (ứng viên), tài khoản nội bộ và hồ sơ của họ.
+Dữ liệu danh mục (Catalogs): Các bảng chứa danh sách (ví dụ: skills, universities) sẽ có các endpoint riêng để FE lấy dữ liệu và hiển thị trong các bộ lọc hoặc dropdown.
 
-### applicants
+I. Lõi: Ứng viên & Người dùng (Applicant & User Core)
 
-Đây là đối tượng Applicant chính. Mọi thông tin định danh cơ bản đều nằm ở đây.
+Nhóm này chứa các thực thể trung tâm, đại diện cho con người trong hệ thống.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
-applicant_id	integer	PK - ID duy nhất. Sẽ là key trong mọi API call liên quan đến user này.
+applicants
+
+Bảng quan trọng nhất, chứa thông tin định danh cơ bản của một ứng viên.
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+applicant_id	integer	PK - ID duy nhất, dùng trong mọi API liên quan đến ứng viên này.
 full_name	varchar	Hiển thị: Tên người dùng trên header, profile.
 email	varchar	Hiển thị & Liên lạc: Email chính.
-avatar_url	text	Hiển thị: Link ảnh để render thẻ <img>.
-is_talent	boolean	UI Logic: Nếu true, hiển thị huy hiệu "Talent" đặc biệt bên cạnh tên.
-profile_completion	integer	UI Logic: Dữ liệu (0-100) để vẽ component Progress Bar hoàn thiện hồ sơ.
-### applicant_profiles
+avatar_url	text	Hiển thị: Link ảnh đại diện.
+is_talent	boolean	UI Logic: Nếu true, hiển thị huy hiệu "Talent".
+profile_completion	integer	UI Logic: Dữ liệu (0-100) để vẽ Progress Bar hoàn thiện hồ sơ.
+applicant_profiles
 
-Đối tượng ApplicantProfile, chứa các dữ liệu "rich content" do người dùng tự điền. Thường sẽ được lồng trong API response của Applicant.
+Hồ sơ chi tiết, chứa các thông tin do ứng viên tự điền để làm đẹp profile.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 applicant_id	integer	FK - Liên kết tới applicants.
-summary	text	Hiển thị: Đoạn "Giới thiệu bản thân" nổi bật ở đầu trang profile.
+summary	text	Hiển thị: Đoạn "Giới thiệu bản thân".
 cv_url	varchar	Chức năng: Link để tạo nút "Tải CV".
 portfolio_url	varchar	Chức năng: Link để tạo nút "Xem Portfolio".
-### users
+applicant_accounts
 
-Đối tượng User, đại diện cho các tài khoản nội bộ như Admin, nhân viên Dia, Mentor...
+Thông tin tài khoản để ứng viên đăng nhập vào hệ thống.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+applicant_id	integer	FK - Liên kết tới applicants.
+account_status	enum	UI Logic: Dùng để kiểm tra trạng thái tài khoản (active, inactive).
+talents
+
+Thông tin mở rộng cho những ứng viên được đánh dấu là "talent" (is_talent = true).
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+applicant_id	integer	FK - Liên kết tới applicants.
+rating	numeric	Hiển thị: Điểm đánh giá (ví dụ: 1-5 sao).
+users
+
+Tài khoản người dùng nội bộ (Admin, nhân viên Dia, Mentor...).
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 user_id	integer	PK - ID của người dùng hệ thống.
 full_name	varchar	Tên người dùng nội bộ.
-email	varchar	Email đăng nhập.
+user_roles
 
-(Các bảng applicant_accounts, talents, user_roles, employees chứa thông tin về tài khoản, vai trò và các thuộc tính nâng cao, BE sẽ xử lý logic này).
+Bảng nối xác định vai trò của một User nội bộ.
 
-🏢 Lõi: Công ty (Company Core)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+user_id	uuid	FK - Người dùng được gán vai trò.
+role	enum	Vai trò cụ thể (ví dụ: admin, mentor).
+employees
 
-Nhóm thực thể đại diện cho các đối tác tuyển dụng và trang hồ sơ của họ.
+Thông tin về các nhân viên (có thể là nhân viên của Dia hoặc của công ty đối tác).
 
-### companies
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+employees_id	integer	PK - ID của nhân viên.
+role	varchar	Vai trò của nhân viên.
+II. Lõi: Công ty (Company Core)
 
-Đối tượng Company cơ bản.
+Nhóm này quản lý thông tin của các công ty và nhà tuyển dụng.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+companies
+
+Thông tin định danh cơ bản của một công ty.
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 company_id	integer	PK - ID duy nhất của công ty.
 company_name	varchar	Hiển thị: Tên chính của công ty.
-logo_url	varchar	Hiển thị: Link logo để hiển thị trên các card việc làm và trang công ty.
-industry	varchar	Hiển thị: Dùng để hiển thị tag hoặc thông tin lĩnh vực.
-is_vip	boolean	UI Logic: Nếu true, hiển thị huy hiệu "VIP" bên cạnh tên công ty.
+logo_url	varchar	Hiển thị: Link logo.
+industry	varchar	Hiển thị: Lĩnh vực hoạt động.
+is_vip	boolean	UI Logic: Nếu true, hiển thị huy hiệu "VIP".
+company_accounts
 
-📝 Ghi chú: Trang profile công ty sẽ rất chi tiết. BE sẽ tổng hợp dữ liệu từ các bảng phụ (company_contact, company_locations, company_timeline, company_experience) vào một API response duy nhất là GET /api/companies/{id}.
+Tài khoản đăng nhập cho đại diện công ty.
 
-🤝 Tương tác: Tuyển dụng (Recruitment Interaction)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
+company_id	integer	FK - Liên kết tới companies.
+Các bảng thông tin chi tiết công ty
 
-Luồng tương tác chính: Công ty đăng tin, ứng viên ứng tuyển.
+Ghi chú cho FE: Dữ liệu từ các bảng này (company_contact, company_locations, company_timeline, company_experience) sẽ được BE tổng hợp và trả về trong một API duy nhất khi FE gọi lấy chi tiết một công ty.
 
-### jobs
+III. Tương tác: Tuyển dụng (Recruitment Interaction)
 
-Đối tượng Job, đại diện cho một tin đăng tuyển.
+Nhóm này mô tả luồng chính: công ty đăng việc và ứng viên nộp đơn.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+jobs
+
+Thông tin chi tiết về một vị trí công việc.
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 job_id	integer	PK - ID duy nhất của công việc.
 name	varchar	Hiển thị: Tên/Tiêu đề của tin tuyển dụng.
-company_name	text	Hiển thị: Tên công ty (để hiển thị nhanh trên card, không cần join).
-status	text	UI Logic: Dùng để filter (active/closed) hoặc hiển thị tag "Còn hạn".
-experience_level	text	Hiển thị: Dùng để hiển thị tag/label cấp bậc (e.g., Entry, Junior).
+company_name	text	Hiển thị: Tên công ty (để hiển thị nhanh trên card).
+status	text	UI Logic: Dùng để filter (active/closed).
+experience_level	text	Hiển thị: Tag/label cấp bậc (e.g., Entry, Junior).
 salary_min, salary_max	numeric	Hiển thị: Dữ liệu cho khoảng lương.
-job_type, work_format	text	Hiển thị: Tags cho loại hình (Full-time, Remote...).
-### job_applications
+job_type, work_format	text	Hiển thị: Tags cho loại hình (Full-time, Remote).
+job_applications
 
-Đối tượng JobApplication, ghi lại việc ứng tuyển.
+Bảng ghi lại hành động một ứng viên ứng tuyển vào một công việc.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 application_id	integer	PK - ID của lượt ứng tuyển.
-applicant_id	integer	FK - Ai đã ứng tuyển.
+applicant_id	integer	FK - Ai là người ứng tuyển.
 job_id	integer	FK - Đã ứng tuyển vào công việc nào.
-status	enum	Cực kỳ quan trọng cho UI: Dùng để hiển thị step-tracker hoặc tag màu (e.g., Đang chờ, Đã duyệt).
-🚀 Tương tác: Dự án & Tác vụ (Projects & Tasks)
+status	enum	Quan trọng cho UI: Dùng để hiển thị tag màu (Đang chờ, Đã duyệt).
+IV. Tương tác: Dự án & Tác vụ (Projects & Tasks)
 
-Luồng tương tác dành cho các "talent" khi tham gia vào dự án thực tế.
+Nhóm này quản lý các dự án thực tế mà "talent" có thể tham gia.
 
-### projects
+projects
 
-Đối tượng Project.
+Thông tin về một dự án.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 project_id	integer	PK - ID duy nhất của dự án.
+company_id	integer	FK - Dự án này thuộc công ty nào.
 name	varchar	Hiển thị: Tên dự án.
 status	enum	UI Logic: Dùng để filter và hiển thị tag trạng thái.
-progress	integer	Hiển thị: Dữ liệu (0-100) để vẽ component Progress Bar.
-### tasks
+progress	integer	Hiển thị: Dữ liệu (0-100) để vẽ Progress Bar.
+tasks
 
-Đối tượng Task con trong một Project.
+Các công việc/nhiệm vụ cụ thể trong một dự án.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 task_id	integer	PK - ID duy nhất của tác vụ.
 project_id	integer	FK - Tác vụ này thuộc dự án nào.
 name	varchar	Hiển thị: Tên tác vụ.
-status	enum	UI Logic: Hiển thị trạng thái của task (e.g., Todo, In Progress, Done).
+status	enum	UI Logic: Hiển thị trạng thái của task (Todo, In Progress, Done).
 priority	text	UI Logic: Hiển thị icon/tag độ ưu tiên (low, medium, high).
+Các bảng liên quan đến Dự án & Tác vụ
 
-🔗 Mối quan hệ: Bảng project_participation sẽ cho biết Applicant nào đang tham gia Project nào. API GET /api/projects/{id} sẽ trả về danh sách người tham gia. Các bảng evaluations, meetings, task_comments là các dữ liệu chi tiết hỗ trợ cho một tác vụ hoặc dự án.
+project_participation: Bảng nối cho biết Applicant nào tham gia Project nào.
 
-🎉 Tương tác: Sự kiện & Workshop (Events & Workshops)
+project_talents: Bảng nối thể hiện Applicant nào là "talent" trong Project.
 
-Luồng tương tác liên quan đến các hoạt động cộng đồng.
+meetings & meeting_attendees: Quản lý các cuộc họp và người tham dự.
 
-### events & workshops
+evaluations: Chứa các đánh giá cho Task của một Applicant.
 
-Đối tượng Event và Workshop.
+task_comments & task_attachments: Các bình luận và file đính kèm cho một Task.
 
-Tên cột (Field Name)	Kiểu dữ liệu (Data Type)	Ghi chú cho FE (Notes for FE)
+V. Tương tác: Sự kiện & Workshop (Events & Workshops)
+
+Nhóm này quản lý các hoạt động cộng đồng và việc tham gia của người dùng.
+
+events, workshops, & connect_events
+
+Thông tin về các sự kiện, workshop và các sự kiện kết nối.
+
+Tên Cột	Kiểu Dữ liệu	Ghi chú cho Frontend
 event_id/workshop_id	integer	PK - ID của hoạt động.
-title	text	Hiển thị: Tên sự kiện/workshop.
-start_time	timestamp	Hiển thị: Thời gian bắt đầu. Dùng để tính toán và hiển thị tag "Sắp diễn ra".
+title/event_name	text	Hiển thị: Tên sự kiện/workshop.
+start_time	timestamp	Hiển thị: Thời gian bắt đầu.
 format	text	Hiển thị: Tag hình thức (Online, Offline).
-status	text	UI Logic: Trạng thái của sự kiện (upcoming, ongoing, completed).
+status	text	UI Logic: Trạng thái (upcoming, ongoing, completed).
+Các bảng ghi danh và tham gia
 
-🔗 Mối quan hệ: Các bảng event_registrations và workshop_registrations ghi lại việc Applicant đăng ký tham gia các hoạt động này. Các bảng user_events và user_workshops ghi lại trạng thái tham dự của User (nội bộ).
+event_registrations & workshop_registrations: Ghi lại việc Applicant đăng ký tham gia.
 
-📚 Dữ liệu Danh mục (Catalog / Master Data)
+user_events & user_workshops: Ghi lại trạng thái tham dự của User (nội bộ).
+
+event_staff: Ai là nhân viên hỗ trợ cho sự kiện.
+
+event_jobs: Các công việc được giới thiệu trong sự kiện.
+
+lucky_draw_results: Kết quả quay số may mắn trong workshop.
+
+VI. Dữ liệu Danh mục (Catalog / Master Data)
 
 Nhóm này chứa dữ liệu không thay đổi thường xuyên, dùng để populate cho các component UI.
 
-💡 Dành cho FE: Đây là dữ liệu "master data". Các bạn sẽ gọi các endpoint riêng như GET /api/skills để lấy toàn bộ danh sách và populate cho các component Filter, Dropdown, hoặc Autocomplete.
+Ghi chú cho FE: Đây là dữ liệu "master data". Các bạn sẽ gọi các endpoint riêng như GET /api/skills để lấy toàn bộ danh sách và populate cho các component Filter, Dropdown, hoặc Autocomplete.
 
 skills: Danh sách tất cả các kỹ năng trong hệ thống.
 
@@ -146,16 +199,22 @@ tags: Danh sách các thẻ để phân loại.
 
 interests: Danh sách các sở thích.
 
-⚙️ Hệ thống & Chức năng phụ (System & Auxiliary)
+Các bảng nối danh mục
 
-Các bảng này phục vụ các chức năng hỗ trợ và ít liên quan trực tiếp đến các luồng chính của ứng viên.
+applicant_skills & task_skills: Áp dụng skills vào ứng viên và tác vụ.
 
-notifications: Chứa các thông báo (chuông thông báo trên header).
+applicant_majors: Áp dụng majors vào ứng viên.
 
-posts: Các bài đăng trên nền tảng (social feature).
+project_tags & workshop_tags: Áp dụng tags vào dự án và workshop.
 
-es_wallets & es_wallet_transactions: Tính năng ví điện tử.
+VII. Hệ thống & Chức năng phụ (System & Auxiliary Features)
 
-kv_store_...: Bảng lưu trữ key-value cho các cấu hình hệ thống (FE không cần quan tâm).
+Các bảng này phục vụ các chức năng hỗ trợ.
 
-Hy vọng tài liệu này giúp team Frontend làm việc hiệu quả hơn. Mọi thắc mắc về cấu trúc response API hoặc cần thêm trường dữ liệu, hãy trao đổi trực tiếp với team Backend!
+notifications: Chứa các thông báo (hiển thị ở chuông thông báo trên header).
+
+posts: Các bài đăng trên nền tảng (tính năng mạng xã hội).
+
+es_wallets & es_wallet_transactions: Tính năng ví điện tử và lịch sử giao dịch.
+
+kv_store_e9863467: Bảng lưu trữ key-value cho các cấu hình hệ thống (FE không cần quan tâm).
