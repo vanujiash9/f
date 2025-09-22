@@ -1,101 +1,110 @@
-# Talent Pool Database – Backend Documentation
+# 📖 Tài liệu Schema Cơ sở Dữ liệu `dia_talents`
 
-> **Mục tiêu:** Cung cấp cho Frontend team cái nhìn rõ ràng về database schema, quan hệ giữa các bảng, và cách query dữ liệu từ Supabase.
-
----
-
-## 1️⃣ Kiến trúc tổng quan
-
-Hệ thống được chia thành 5 nhóm bảng chính:
-
-1. **Applicants** – Quản lý ứng viên, tài khoản, hồ sơ.
-2. **Companies** – Thông tin công ty, tài khoản công ty, địa điểm.
-3. **Jobs & Applications** – Danh sách công việc và đơn ứng tuyển.
-4. **Projects & Tasks** – Dự án, nhiệm vụ, người tham gia.
-5. **Events & Workshops** – Sự kiện, đăng ký, workshop.
-
-Mỗi nhóm được thiết kế với **quan hệ rõ ràng** (PK/FK) để FE dễ join dữ liệu khi hiển thị.
+Tài liệu này giải thích chi tiết cấu trúc cơ sở dữ liệu từ góc nhìn Backend, giúp Frontend hiểu rõ bảng, cột, và mối quan hệ để hiển thị dữ liệu đúng cách khi gọi API.
 
 ---
 
-## 2️⃣ Bảng chính & Mối quan hệ
+## 1. Nguyên tắc dành cho Frontend
 
-### 👤 Applicants
-| Bảng | Trường chính | Quan hệ |
-|------|-------------|---------|
-| `applicants` | `id` | 1–N với `applicant_profiles`, `job_applications`, `project_participation` |
-| `applicant_accounts` | `id`, `applicant_id` | FK → `applicants.id` |
-| `applicant_profiles` | `id`, `applicant_id` | FK → `applicants.id` |
-| `applicant_skills` | `id`, `applicant_id` | FK → `applicants.id` |
-| `applicant_majors` | `id`, `applicant_id`, `major_id` | FK → `applicants.id`, `majors.id` |
-
-**Use case FE:**  
-- Hiển thị danh sách ứng viên + kỹ năng + hồ sơ
-- Cho phép user chỉnh sửa CV/Portfolio
+| Quy tắc | Ý nghĩa |
+|--------|---------|
+| ID là định danh chính | Mọi đối tượng chính (ứng viên, công ty, công việc) đều có một ID duy nhất. FE dùng ID để gọi API chi tiết (`GET /api/object/{id}`). |
+| Dữ liệu lồng nhau | API sẽ trả về dữ liệu đã join sẵn. Ví dụ: chi tiết ứng viên sẽ bao gồm thông tin hồ sơ và danh sách kỹ năng. |
+| Dữ liệu danh mục | Các bảng danh mục (skills, universities, majors, tags...) có endpoint riêng để FE lấy về cho bộ lọc/dropdown. |
 
 ---
 
-### 🏢 Companies
-| Bảng | Trường chính | Quan hệ |
-|------|-------------|---------|
-| `companies` | `id` | 1–N với `company_locations`, `jobs`, `projects` |
-| `company_accounts` | `id`, `company_id` | FK → `companies.id` |
-| `company_locations` | `id`, `company_id` | FK → `companies.id` |
-| `company_contact` | `company_id` | FK → `companies.id` |
+## 2. Nhóm Bảng & Ý Nghĩa
 
-**Use case FE:**  
-- Trang chi tiết công ty (logo, giới thiệu, địa điểm, số job đang mở)
-- Danh sách job theo công ty
-
----
-
-### 💼 Jobs & Applications
-| Bảng | Trường chính | Quan hệ |
-|------|-------------|---------|
-| `jobs` | `id`, `company_id` | FK → `companies.id` |
-| `job_applications` | `id`, `job_id`, `applicant_id` | FK → `jobs.id`, `applicants.id` |
-
-**Use case FE:**  
-- Hiển thị job listing (filter theo lương, loại việc)
-- Ứng viên nhấn "Apply" → tạo record trong `job_applications`
+### 2.1. Applicants (Ứng viên & Hồ sơ)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `applicants` | `applicant_id` | 1-N với profiles, skills, job_applications | Hồ sơ gốc của ứng viên (tên, email, avatar, trạng thái talent). |
+| `applicant_accounts` | `applicant_id` | FK → applicants | Quản lý tài khoản đăng nhập (active/inactive). |
+| `applicant_profiles` | `applicant_id` | FK → applicants | Hồ sơ chi tiết (CV, portfolio, summary). |
+| `applicant_skills` | `applicant_id`, `skill_id` | FK → applicants, skills | Liệt kê kỹ năng của ứng viên. |
+| `applicant_majors` | `applicant_id`, `major_id` | FK → applicants, majors | Liệt kê ngành học của ứng viên. |
 
 ---
 
-### 📂 Projects & Tasks
-| Bảng | Trường chính | Quan hệ |
-|------|-------------|---------|
-| `projects` | `id`, `company_id` | FK → `companies.id` |
-| `project_participation` | `project_id`, `applicant_id` | FK → `projects.id`, `applicants.id` |
-| `tasks` | `id`, `project_id` | FK → `projects.id` |
-| `task_comments` | `task_id`, `user_id` | FK → `tasks.id`, `users.id` |
-
-**Use case FE:**  
-- Trang quản lý dự án (list project + list thành viên)
-- Board Kanban để quản lý tasks + comment realtime
+### 2.2. Companies (Công ty)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `companies` | `company_id` | 1-N với jobs, projects | Thông tin công ty (tên, logo, ngành nghề). |
+| `company_accounts` | `company_id` | FK → companies | Tài khoản đại diện công ty (HR). |
+| `company_locations` | `company_id` | FK → companies | Danh sách địa điểm văn phòng. |
+| `company_contact` | `company_id` | FK → companies | Thông tin liên hệ chính thức. |
 
 ---
 
-### 🎉 Events & Workshops
-| Bảng | Trường chính | Quan hệ |
-|------|-------------|---------|
-| `events` | `id` | 1–N với `event_registrations`, `event_jobs` |
-| `event_registrations` | `id`, `event_id`, `applicant_id` | FK → `events.id`, `applicants.id` |
-| `event_jobs` | `event_id`, `job_id` | FK → `events.id`, `jobs.id` |
-
-**Use case FE:**  
-- Trang sự kiện: show chi tiết event, cho phép đăng ký
-- Hiển thị job tuyển dụng trong sự kiện
+### 2.3. Jobs & Applications (Tuyển dụng)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `jobs` | `job_id`, `company_id` | FK → companies | Thông tin tin tuyển dụng (tiêu đề, mức lương, loại hình). |
+| `job_applications` | `application_id`, `job_id`, `applicant_id` | FK → jobs, applicants | Đơn ứng tuyển của ứng viên cho công việc. |
 
 ---
 
-## 3️⃣ Cách Query từ FE (Supabase JS)
+### 2.4. Projects & Tasks (Dự án & Nhiệm vụ)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `projects` | `project_id`, `company_id` | FK → companies | Dự án thuộc công ty. |
+| `project_participation` | `project_id`, `applicant_id` | FK → projects, applicants | Xác định ứng viên nào tham gia dự án. |
+| `tasks` | `task_id`, `project_id` | FK → projects | Các nhiệm vụ trong dự án. |
+| `task_comments` | `task_id`, `user_id` | FK → tasks, users | Bình luận và cập nhật trạng thái task. |
+| `task_skills` | `task_id`, `skill_id` | FK → tasks, skills | Kỹ năng yêu cầu cho từng task. |
 
-### Lấy danh sách job kèm công ty
+---
+
+### 2.5. Events & Workshops (Sự kiện & Hoạt động)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `events` | `event_id` | 1-N với registrations, event_jobs | Thông tin sự kiện (tên, thời gian, trạng thái). |
+| `event_registrations` | `event_id`, `applicant_id` | FK → events, applicants | Ghi nhận ứng viên đăng ký tham gia sự kiện. |
+| `event_jobs` | `event_id`, `job_id` | FK → events, jobs | Liên kết job được giới thiệu trong sự kiện. |
+
+---
+
+### 2.6. Catalogs (Dữ liệu danh mục)
+| Bảng | Trường chính | Quan hệ | Ý nghĩa |
+|------|-------------|---------|--------|
+| `skills` | `skill_id` | N-N với applicants, tasks | Danh sách kỹ năng dùng cho applicant_skills và task_skills. |
+| `universities` | `university_id` | N-N với applicants | Danh sách trường đại học. |
+| `majors` | `major_id` | N-N với applicants | Danh sách ngành học. |
+| `tags` | `tag_id` | N-N với projects, workshops | Danh sách thẻ phân loại. |
+
+---
+
+## 3. Hướng dẫn cho Frontend
+
+- Luôn lấy `id` để gọi API chi tiết.
+- Kiểm tra dữ liệu null trước khi render (CV có thể chưa có).
+- Với các bảng nối (skills, majors), hãy gọi endpoint riêng để lấy danh sách trước, sau đó filter theo `id`.
+
+Ví dụ query danh sách job kèm tên công ty:
 ```js
-const { data, error } = await supabase
+const { data } = await supabase
   .from('jobs')
   .select(`
-    id, title, min_salary, max_salary, deadline,
-    companies ( id, name, logo_url )
+    job_id, name, salary_min, salary_max,
+    companies ( company_name, logo_url )
   `);
+4. Liên hệ
+Nếu có yêu cầu thêm API hoặc view phức tạp, vui lòng liên hệ BE qua:
+📧 Email: thanh.van19062004@gmail.com
+📱 TikTok: @bevancutethichhocdata
 
+5. Sơ đồ ERD (Đề xuất)
+
+yaml
+Copy code
+
+---
+
+📌 **Điểm chính:**  
+- Không còn icon gây rối.  
+- Các bảng & mối quan hệ cân đối, trình bày theo nhóm rõ ràng.  
+- Có cột "Ý nghĩa" giải thích từng bảng cho FE.  
+- Thêm thông tin liên hệ BE ở cuối.  
+
+Bạn có muốn mình **vẽ luôn file ERD thực tế (PNG hoặc SVG)** dựa trên tài liệu này để bạn đưa vào thư mục 
