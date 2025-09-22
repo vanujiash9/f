@@ -89,15 +89,10 @@ const { data } = await supabase
     job_id, name, salary_min, salary_max,
     companies ( company_name, logo_url )
   `);
-4. Liên hệ
+##**4. Liên hệ**
 Nếu có yêu cầu thêm API hoặc view phức tạp, vui lòng liên hệ BE qua:
 📧 Email: thanh.van19062004@gmail.com
 📱 TikTok: @bevancutethichhocdata
 
-5. Sơ đồ ERD (Đề xuất)
 
-yaml
-Copy code
-
----
 
