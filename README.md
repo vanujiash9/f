@@ -1,199 +1,102 @@
+📄 Tài liệu Schema Cơ sở dữ liệu dia_talents
+📝 Giới thiệu
 
+Tài liệu này cung cấp cái nhìn tổng quan và chi tiết về cấu trúc cơ sở dữ liệu dia_talents.
+Mục tiêu: giúp team Frontend hiểu rõ mô hình dữ liệu, các trường quan trọng và mối quan hệ giữa chúng khi gọi API.
 
-# 📖 **Tài liệu Schema Cơ sở dữ liệu `dia_talents`**
+🔑 Nguyên tắc dành cho Frontend
 
-## 📝 **Giới thiệu**
+ID là định danh chính
+Mọi đối tượng (ứng viên, công ty, công việc) đều có ID duy nhất → dùng cho API:
+GET /api/object/{id}
 
-Tài liệu này cung cấp một cái nhìn **tổng quan chi tiết** về cấu trúc cơ sở dữ liệu **dia\_talents**.
-Mục tiêu: giúp **team Frontend** hiểu rõ:
+Dữ liệu lồng nhau
+API trả về object kèm dữ liệu con (profile, skills...) để FE render ngay.
 
-* Các **mô hình dữ liệu**
-* Các **trường quan trọng**
-* **Mối quan hệ** giữa các bảng khi làm việc với API.
+Dữ liệu danh mục (Catalog)
+Gọi riêng endpoint GET /api/skills, GET /api/universities... để populate dropdown/filter.
 
----
+I. Lõi: Ứng viên & Người dùng (Applicant & User Core)
+🧑‍💻 Bảng chính
+Bảng	Mục đích
+applicants	Thông tin định danh cơ bản của ứng viên.
+applicant_profiles	Hồ sơ chi tiết (summary, CV, portfolio).
+applicant_accounts	Trạng thái tài khoản ứng viên.
+talents	Mở rộng cho ứng viên là Talent (rating).
+👥 Bảng người dùng nội bộ
+Bảng	Mục đích
+users	Tài khoản nội bộ (Admin, Mentor).
+user_roles	Bảng nối – vai trò user (admin, mentor).
+employees	Danh sách nhân viên (Dia hoặc đối tác).
+II. Lõi: Công ty (Company Core)
+Bảng	Mục đích
+companies	Thông tin định danh công ty (tên, logo, VIP).
+company_accounts	Tài khoản đăng nhập của đại diện công ty.
+company_contact	Thông tin liên hệ (số điện thoại, email).
+company_locations	Địa chỉ, chi nhánh.
+company_timeline	Mốc thời gian quan trọng (thành lập, sự kiện).
+company_experience	Các dự án/kinh nghiệm đã thực hiện.
 
-## ⚙️ **Nguyên tắc dành cho Frontend**
+📌 FE note: Khi gọi API GET /api/company/{id}, BE sẽ trả về data gộp từ tất cả bảng liên quan.
 
-* **ID là định danh chính:** mọi đối tượng chính (**ứng viên, công ty, công việc**) đều có một **ID duy nhất** → dùng để gọi API:
-  `GET /api/object/{id}`
-* **Dữ liệu lồng nhau:** API trả về object có kèm các bản ghi liên quan (ví dụ: profile, skills).
-* **Dữ liệu danh mục (Catalogs):** các bảng như `skills`, `universities` có endpoint riêng để FE lấy về populate dropdown/filter.
+III. Tương tác: Tuyển dụng (Recruitment Interaction)
+Bảng	Mục đích
+jobs	Tin tuyển dụng (tiêu đề, công ty, mức lương, work format).
+job_applications	Lượt ứng tuyển (ai ứng tuyển vào job nào, status).
+job_requirements	Yêu cầu kỹ năng, kinh nghiệm.
+job_tags	Tags gắn vào job (hot, urgent...).
+job_benefits	Quyền lợi, phúc lợi hiển thị cho FE.
 
----
+📌 FE note: Status active/closed dùng để filter job card.
 
-## 👤 **I. Lõi: Ứng viên & Người dùng (Applicant & User Core)**
+IV. Tương tác: Dự án & Tác vụ (Projects & Tasks)
+Bảng	Mục đích
+projects	Dự án thực tế (company_id, name, status, progress).
+tasks	Nhiệm vụ trong dự án (name, priority, status).
+project_participation	Applicant tham gia dự án nào.
+project_talents	Applicant nào là Talent trong dự án.
+meetings	Cuộc họp thuộc dự án.
+meeting_attendees	Ai tham gia cuộc họp.
+evaluations	Đánh giá kết quả task của applicant.
+task_comments	Bình luận trong task.
+task_attachments	File đính kèm task.
+task_skills	Kỹ năng yêu cầu của task.
 
-### 🔹 **`applicants`** (Bảng trung tâm)
+📌 FE note: progress (0-100) dùng vẽ progress bar trên UI.
 
-| **Tên Cột**              | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**       |
-| ------------------------ | ---------------- | ------------------------------ |
-| **`applicant_id`**       | `integer`        | **PK** – ID duy nhất           |
-| **`full_name`**          | `varchar`        | Hiển thị trên header, profile  |
-| **`email`**              | `varchar`        | Dùng để liên lạc, định danh    |
-| **`avatar_url`**         | `text`           | Link ảnh đại diện              |
-| **`is_talent`**          | `boolean`        | Hiển thị huy hiệu **Talent**   |
-| **`profile_completion`** | `integer`        | Vẽ Progress Bar hồ sơ (0–100%) |
+V. Tương tác: Sự kiện & Workshop (Events & Workshops)
+Bảng	Mục đích
+events	Sự kiện cộng đồng (start_time, format, status).
+workshops	Workshop đào tạo/mentoring.
+connect_events	Sự kiện networking/meetup.
+event_registrations	Applicant đăng ký sự kiện.
+workshop_registrations	Applicant đăng ký workshop.
+user_events	User nội bộ tham dự sự kiện.
+user_workshops	User nội bộ tham dự workshop.
+event_staff	Nhân viên hỗ trợ sự kiện.
+event_jobs	Công việc được giới thiệu trong sự kiện.
+lucky_draw_results	Kết quả quay số trúng thưởng.
 
----
+📌 FE note: Status upcoming / ongoing / completed → dùng hiển thị tag màu.
 
-### 🔹 **`applicant_profiles`**
+VI. Dữ liệu Danh mục (Catalog / Master Data)
+Bảng	Mục đích
+skills	Danh sách kỹ năng.
+universities	Danh sách trường ĐH.
+majors	Danh sách ngành học.
+tags	Danh sách thẻ phân loại.
+interests	Danh sách sở thích.
+applicant_skills	Gắn skills cho applicant.
+applicant_majors	Gắn major cho applicant.
+project_tags	Gắn tags cho project.
+workshop_tags	Gắn tags cho workshop.
 
-| **Tên Cột**         | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ------------------- | ---------------- | ------------------------ |
-| **`applicant_id`**  | `integer`        | FK đến `applicants`      |
-| **`summary`**       | `text`           | Đoạn giới thiệu bản thân |
-| **`cv_url`**        | `varchar`        | Nút tải CV               |
-| **`portfolio_url`** | `varchar`        | Nút xem Portfolio        |
+📌 FE note: FE gọi các endpoint GET /api/{catalog} để lấy toàn bộ dữ liệu gốc.
 
----
-
-### 🔹 **`applicant_accounts`**
-
-| **Tên Cột**          | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**           |
-| -------------------- | ---------------- | ---------------------------------- |
-| **`applicant_id`**   | `integer`        | FK đến `applicants`                |
-| **`account_status`** | `enum`           | Check trạng thái (active/inactive) |
-
----
-
-### 🔹 **`talents`**
-
-| **Tên Cột**        | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ------------------ | ---------------- | ------------------------ |
-| **`applicant_id`** | `integer`        | FK đến `applicants`      |
-| **`rating`**       | `numeric`        | Hiển thị số sao đánh giá |
-
----
-
-### 🔹 **`users`** (Tài khoản nội bộ)
-
-| **Tên Cột**     | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**           |
-| --------------- | ---------------- | ---------------------------------- |
-| **`user_id`**   | `integer`        | PK – ID user hệ thống              |
-| **`full_name`** | `varchar`        | Tên hiển thị trong admin dashboard |
-
----
-
-### 🔹 **`user_roles`**
-
-| **Tên Cột**   | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ------------- | ---------------- | ------------------------ |
-| **`user_id`** | `uuid`           | FK đến `users`           |
-| **`role`**    | `enum`           | admin, mentor, staff...  |
-
----
-
-## 🏢 **II. Lõi: Công ty (Company Core)**
-
-### 🔹 **`companies`**
-
-| **Tên Cột**        | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ------------------ | ---------------- | ------------------------ |
-| **`company_id`**   | `integer`        | PK – ID duy nhất         |
-| **`company_name`** | `varchar`        | Hiển thị tên công ty     |
-| **`logo_url`**     | `varchar`        | Logo công ty             |
-| **`industry`**     | `varchar`        | Lĩnh vực hoạt động       |
-| **`is_vip`**       | `boolean`        | Huy hiệu VIP             |
-
----
-
-### 🔹 **`company_accounts`**
-
-| **Tên Cột**      | **Kiểu Dữ liệu** | **Ghi chú**        |
-| ---------------- | ---------------- | ------------------ |
-| **`company_id`** | `integer`        | FK đến `companies` |
-
-> **FE note:** Các bảng chi tiết như `company_contact`, `company_locations` được BE trả gộp trong API **GET /api/companies/\:id**
-
----
-
-## 💼 **III. Tương tác: Tuyển dụng (Recruitment)**
-
-### 🔹 **`jobs`**
-
-| **Tên Cột**                     | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**   |
-| ------------------------------- | ---------------- | -------------------------- |
-| **`job_id`**                    | `integer`        | PK – ID job                |
-| **`name`**                      | `varchar`        | Tiêu đề tin tuyển dụng     |
-| **`company_name`**              | `text`           | Hiển thị nhanh             |
-| **`status`**                    | `text`           | Filter job (active/closed) |
-| **`experience_level`**          | `text`           | Tag cấp bậc                |
-| **`salary_min` / `salary_max`** | `numeric`        | Khoảng lương               |
-| **`job_type` / `work_format`**  | `text`           | Tag loại hình làm việc     |
-
----
-
-### 🔹 **`job_applications`**
-
-| **Tên Cột**          | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**                     |
-| -------------------- | ---------------- | -------------------------------------------- |
-| **`application_id`** | `integer`        | PK                                           |
-| **`applicant_id`**   | `integer`        | FK đến ứng viên                              |
-| **`job_id`**         | `integer`        | FK đến job                                   |
-| **`status`**         | `enum`           | Hiển thị badge (Pending, Approved, Rejected) |
-
----
-
-## 📊 **IV. Tương tác: Dự án & Tác vụ (Projects & Tasks)**
-
-### 🔹 **`projects`**
-
-| **Tên Cột**      | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ---------------- | ---------------- | ------------------------ |
-| **`project_id`** | `integer`        | PK                       |
-| **`company_id`** | `integer`        | FK                       |
-| **`name`**       | `varchar`        | Hiển thị tên             |
-| **`status`**     | `enum`           | Filter theo trạng thái   |
-| **`progress`**   | `integer`        | Hiển thị progress bar    |
-
----
-
-### 🔹 **`tasks`**
-
-| **Tên Cột**      | **Kiểu Dữ liệu** | **Ghi chú cho Frontend** |
-| ---------------- | ---------------- | ------------------------ |
-| **`task_id`**    | `integer`        | PK                       |
-| **`project_id`** | `integer`        | FK                       |
-| **`name`**       | `varchar`        | Tên task                 |
-| **`status`**     | `enum`           | Todo/In Progress/Done    |
-| **`priority`**   | `text`           | Hiển thị tag mức ưu tiên |
-
----
-
-> **Các bảng liên quan:**
-> `project_participation`, `project_talents`, `task_comments`, `task_attachments`, `evaluations` → BE trả kèm khi FE lấy chi tiết project/task.
-
----
-
-## 🎟 **V. Tương tác: Sự kiện & Workshop (Events & Workshops)**
-
-### 🔹 **`events` / `workshops`**
-
-| **Tên Cột**                    | **Kiểu Dữ liệu** | **Ghi chú cho Frontend**   |
-| ------------------------------ | ---------------- | -------------------------- |
-| **`event_id` / `workshop_id`** | `integer`        | PK                         |
-| **`title` / `event_name`**     | `text`           | Tiêu đề hiển thị           |
-| **`start_time`**               | `timestamp`      | Thời gian bắt đầu          |
-| **`format`**                   | `text`           | Tag (Online, Offline)      |
-| **`status`**                   | `text`           | upcoming/ongoing/completed |
-
----
-
-## 📚 **VI. Dữ liệu Danh mục (Catalog Data)**
-
-* **`skills`** – Danh sách kỹ năng → dùng cho filter, tag cloud
-* **`universities`**, **`majors`**, **`tags`**, **`interests`**
-* Bảng nối: **`applicant_skills`**, **`task_skills`**, **`applicant_majors`**
-
----
-
-## 🔔 **VII. Hệ thống & Chức năng phụ (Auxiliary)**
-
-* **`notifications`** – Thông báo (hiển thị ở bell icon)
-* **`posts`** – Các bài đăng mạng xã hội
-* **`es_wallets`**, **`es_wallet_transactions`** – Ví điện tử
-* **`kv_store_e9863467`** – Key-Value store cấu hình hệ thống (FE **không cần quan tâm**)
-
----
-
+VII. Hệ thống & Chức năng phụ (System & Auxiliary)
+Bảng	Mục đích
+notifications	Thông báo (FE hiển thị icon chuông).
+posts	Bài đăng mạng xã hội.
+es_wallets	Ví điện tử của người dùng.
+es_wallet_transactions	Lịch sử giao dịch ví.
+kv_store_e9863467	Key-value store cho config hệ thống (FE không cần quan tâm).
