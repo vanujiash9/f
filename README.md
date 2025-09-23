@@ -1,143 +1,175 @@
-# DIA Talents Database Schema Documentation
+# DIA Talents Database - Hướng dẫn cho mọi người
 
-*Created by: Thanh Van*  
+*Tạo bởi: Thanh Van*  
 *Facebook: https://www.facebook.com/gmail.com.vancutenemoinguoi196*  
 *Email: thanh.van19062004@gmail.com*
 
 ---
 
-## Tổng quan Database
+## DIA Talents là gì?
 
-Database `dia_talents` là hệ thống quản lý tài năng với 4 module chính: **Applicants**, **Companies**, **Tasks**, và **Workshops**. Ứng viên và doanh nghiệp liên kết với nhau thông qua Tasks, ngoài ra có Workshops để đào tạo.
+**DIA Talents** là một hệ thống giúp **kết nối ứng viên tài năng với doanh nghiệp**. Hệ thống này giống như một cầu nối để:
+- Ứng viên tìm kiếm cơ hội việc làm và phát triển kỹ năng
+- Doanh nghiệp tìm kiếm nhân tài phù hợp
+- Tổ chức các khóa học, workshop để đào tạo
 
-## Cấu trúc Database
+---
 
-### 1. Module Applicants (Quản lý Ứng viên)
+## Cấu trúc Database đơn giản
 
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| **`applicants`** | **Bảng chính** | `applicant_id` | `auth_user_id` → `auth.users.id` | `full_name`, `email`, `is_talent`, `status` |
-| `applicant_accounts` | Tài khoản đăng nhập | `account_id` | `applicant_id` → `applicants` | `username`, `role`, `account_status` |
-| `applicant_profiles` | Hồ sơ chi tiết | `profile_id` | `applicant_id` → `applicants` | `cv_url`, `portfolio_url`, `summary` |
-| `applicant_skills` | Kỹ năng | `applicant_id`, `skill_name` | `applicant_id` → `applicants` | `skill_name` |
-| `applicant_majors` | Chuyên ngành | `applicant_id`, `major_id` | `applicant_id` → `applicants`<br>`major_id` → `majors` | `year`, `gpa`, `certificate` |
-| `talents` | Ứng viên tài năng | `talent_id` | `applicant_id` → `applicants` | `nickname`, `priority`, `rating` |
-| `job_applications` | Đơn ứng tuyển | `application_id` | `applicant_id` → `applicants`<br>`job_id` → `jobs` | `status`, `applied_at` |
-
-### 2. Module Companies (Quản lý Công ty)
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| **`companies`** | **Bảng chính** | `company_id` | - | `company_name`, `industry`, `is_vip` |
-| `company_accounts` | Tài khoản công ty | `account_id` | `company_id` → `companies` | `username`, `role`, `account_status` |
-| `company_contact` | Thông tin liên hệ | `contact_id` | `company_id` → `companies` | `contact_email`, `hr_email`, `average_rating` |
-| `company_locations` | Địa điểm | `location_id` | `company_id` → `companies` | `headquarter`, `city`, `website_url` |
-| `company_timeline` | Timeline hoạt động | `timeline_id` | `company_id` → `companies` | `founded_year`, `active_jobs_count` |
-| `company_experience` | Câu chuyện công ty | `experience_id` | `company_id` → `companies` | `slug`, `meta_title`, `total_views` |
-| `jobs` | Công việc | `job_id` | `created_by` → `auth.users.id` | `name`, `job_type`, `salary_min`, `status` |
-
-### 3. Module Tasks (Quản lý Nhiệm vụ)
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| **`tasks`** | **Bảng chính** | `task_id` | `project_id` → `projects`<br>`created_by` → `auth.users.id` | `name`, `status`, `priority`, `deadline` |
-| `task_skills` | Kỹ năng yêu cầu | `task_id`, `skill_id` | `task_id` → `tasks`<br>`skill_id` → `skills` | `level` |
-| `task_comments` | Bình luận | `id` (uuid) | `task_id` → `tasks` | `content`, `author_id` |
-| `task_attachments` | File đính kèm | `id` (uuid) | `task_id` → `tasks` | `file_name`, `file_url`, `file_size` |
-| `projects` | Dự án chứa task | `project_id` | `company_id` → `companies`<br>`created_by` → `auth.users.id` | `name`, `status`, `progress`, `compensation` |
-| `project_participation` | Tham gia dự án | `project_id`, `applicant_id` | `project_id` → `projects`<br>`applicant_id` → `applicants` | `compensation`, `status` |
-| `evaluations` | Đánh giá task | `evaluation_id` | `task_id` → `tasks`<br>`applicant_id` → `applicants` | `content`, `category` |
-
-### 4. Module Workshops (Quản lý Workshop)
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| **`workshops`** | **Bảng chính** | `workshop_id` | `created_by` → `auth.users.id`<br>`organizer_user_id` → `auth.users.id` | `title`, `theme`, `status`, `start_time` |
-| `user_workshops` | Đăng ký workshop | `id` (uuid) | `user_id` → `auth.users.id`<br>`workshop_id` → `workshops` | `attendance_status`, `rating` |
-| `workshop_registrations` | Đăng ký (legacy) | `applicant_id`, `workshop_id` | `applicant_id` → `applicants`<br>`workshop_id` → `workshops` | `session_start`, `reason` |
-| `workshop_tags` | Tags workshop | `tag_id`, `workshop_id` | `workshop_id` → `workshops`<br>`tag_id` → `tags` | - |
-| `lucky_draw_results` | Quay số may mắn | `lucky_draw_id` | `workshop_id` → `workshops`<br>`applicant_id` → `applicants` | `reward`, `draw_time` |
-
-### 5. Bảng Events và Connect Events
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| `events` | Sự kiện chính | `event_id` | `created_by` → `auth.users.id` | `title`, `event_type`, `status`, `start_time` |
-| `user_events` | Đăng ký sự kiện | `id` (uuid) | `user_id` → `auth.users.id`<br>`event_id` → `events` | `attendance_status`, `rating` |
-| `connect_events` | Sự kiện kết nối (legacy) | `event_id` | `organizer_id` → `users`<br>`employees_id` → `employees` | `event_name`, `format`, `event_date` |
-| `event_registrations` | Đăng ký connect events | `event_id`, `applicant_id` | `event_id` → `connect_events`<br>`applicant_id` → `applicants` | `session_start`, `reason` |
-| `event_staff` | Nhân viên sự kiện | `event_id`, `user_id` | `event_id` → `connect_events`<br>`user_id` → `users` | `role`, `assigned_at` |
-| `event_jobs` | Job trong sự kiện | `event_id`, `job_id` | `event_id` → `connect_events`<br>`job_id` → `jobs` | - |
-
-### 6. Bảng Meetings và Posts
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| `meetings` | Cuộc họp | `meeting_id` | `project_id` → `projects` | `meeting_title`, `meeting_time` |
-| `meeting_attendees` | Người tham dự | `meeting_id`, `applicant_id` | `meeting_id` → `meetings`<br>`applicant_id` → `applicants` | `status` |
-| `posts` | Bài đăng | `post_id` | `company_id` → `companies`<br>`applicant_id` → `applicants` | `content`, `post_type`, `views_count` |
-
-### 6. Reference Data (Dữ liệu tham chiếu)
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| `skills` | Kỹ năng | `skill_id` | - | `name`, `skill_category` |
-| `tags` | Tags | `tag_id` | - | `name`, `type` |
-| `universities` | Trường đại học | `university_id` | - | `university_name` |
-| `majors` | Chuyên ngành | `major_id` | `university_id` → `universities` | `name`, `description` |
-| `interests` | Sở thích | `id` | - | `name` |
-
-### 7. Hệ thống Ví và User Management
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| `es_wallets` | Ví điện tử | `user_id` | `user_id` → `auth.users.id` | `balance` |
-| `es_wallet_transactions` | Giao dịch ví | `id` (uuid) | `from_user_id`, `to_user_id` → `auth.users.id` | `amount`, `type`, `note` |
-| `user_roles` | Vai trò người dùng | `id` (uuid) | `user_id` → `auth.users.id` | `role` |
-| `users` | Người dùng (legacy) | `user_id` | - | `full_name`, `email` |
-| `employees` | Nhân viên (legacy) | `employees_id` | - | `role`, `assigned_id` |
-| `notifications` | Thông báo | `id` (uuid) | - | `title`, `message`, `is_read`, `type` |
-
-### 8. Bảng Utility và Storage
-
-| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
-|-----------|---------|-------------|--------------|------------|
-| `kv_store_e9863467` | Key-value store | `key` | - | `value` (jsonb) |
-
-## Tổng kết: **49 bảng** trong database
-
-## Mối quan hệ chính giữa 4 Module
+### 🏗️ Kiến trúc tổng quan
 
 ```
-APPLICANTS ←→ TASKS ←→ COMPANIES
-    ↓                    ↓
-WORKSHOPS ←→ EVENTS
+        ỨNG VIÊN (Applicants)
+             ↕️
+    NHIỆM VỤ/CÔNG VIỆC (Tasks) 
+             ↕️
+        DOANH NGHIỆP (Companies)
+             
+        WORKSHOP/KHÓA HỌC ↔️ ỨNG VIÊN
 ```
 
-### Luồng dữ liệu chính:
-1. **Applicants** và **Companies** liên kết với nhau thông qua **Tasks** (nhiệm vụ)
-2. **Tasks** là điểm kết nối chính giữa ứng viên và doanh nghiệp
-3. **Applicants** tham gia **Workshops** để học tập và phát triển kỹ năng
-4. **Companies** có thể tạo **Tasks** để giao cho **Applicants** thực hiện
+**Giải thích đơn giản:**
+- Ứng viên đăng ký tài khoản, tạo hồ sơ
+- Doanh nghiệp đăng tuyển việc làm, tạo nhiệm vụ  
+- Ứng viên làm nhiệm vụ cho doanh nghiệp
+- Ứng viên tham gia workshop để học thêm kỹ năng
 
-## Lưu ý quan trọng cho Frontend
+---
 
-### Authentication
-- Sử dụng Supabase Auth (`auth.users.id`)
-- Bảng `users` là legacy, không dùng cho tính năng mới
+## 4 Nhóm chính trong hệ thống
 
-### Data Types đặc biệt
-- **Array fields**: `requirements`, `benefits`, `tags`, `interests`
-- **Enum fields**: `status`, `role`, `type` - cần check constraints
-- **UUID vs Integer**: Bảng mới dùng UUID, bảng cũ dùng integer
+### 1. 👤 NHÓM ỨNG VIÊN (7 bảng)
 
-### Status Values thường gặp
-- **Tasks**: `pending`, `in_progress`, `completed`, `cancelled`
-- **Applications**: `pending`, `accepted`, `rejected`
-- **Workshops/Events**: `scheduled`, `ongoing`, `completed`, `cancelled`
+| Bảng | Chức năng | Dữ liệu chính |
+|------|-----------|---------------|
+| **`applicants`** | **Thông tin cơ bản ứng viên** | Họ tên, email, số điện thoại |
+| `applicant_accounts` | Tài khoản đăng nhập | Username, password |
+| `applicant_profiles` | Hồ sơ chi tiết | CV, portfolio, ảnh đại diện |
+| `applicant_skills` | Kỹ năng của ứng viên | Danh sách kỹ năng |
+| `applicant_majors` | Chuyên ngành học | Ngành học, điểm GPA |
+| `talents` | Ứng viên xuất sắc | Xếp hạng, đánh giá |
+| `job_applications` | Đơn ứng tuyển | Trạng thái đơn, ngày nộp |
 
-### API Recommendations
-1. **Pagination**: Tất cả 4 module chính cần pagination
-2. **Filtering**: Theo `status`, `created_at`, owner
-3. **Search**: Full-text search cho `name`, `title`, `description`
-4. **Permissions**: Check user roles trước khi CRUD
+### 2. 🏢 NHÓM DOANH NGHIỆP (7 bảng)
+
+| Bảng | Chức năng | Dữ liệu chính |
+|------|-----------|---------------|
+| **`companies`** | **Thông tin công ty** | Tên công ty, ngành nghề, logo |
+| `company_accounts` | Tài khoản công ty | Username, password |
+| `company_contact` | Thông tin liên hệ | Email HR, số điện thoại |
+| `company_locations` | Địa chỉ công ty | Trụ sở, chi nhánh |
+| `company_timeline` | Lịch sử công ty | Năm thành lập, số job đã đăng |
+| `company_experience` | Câu chuyện công ty | Bài viết về công ty |
+| `jobs` | Tin tuyển dụng | Vị trí, mức lương, yêu cầu |
+
+### 3. ✅ NHÓM NHIỆM VỤ (7 bảng)
+
+| Bảng | Chức năng | Dữ liệu chính |
+|------|-----------|---------------|
+| **`tasks`** | **Công việc cần làm** | Tên task, mô tả, deadline |
+| `task_skills` | Kỹ năng yêu cầu | Kỹ năng cần có, mức độ |
+| `task_comments` | Bình luận task | Thảo luận, feedback |
+| `task_attachments` | File đính kèm | Tài liệu, hình ảnh |
+| `projects` | Dự án chứa task | Tên dự án, tiến độ |
+| `project_participation` | Tham gia dự án | Ai tham gia, vai trò |
+| `evaluations` | Đánh giá công việc | Điểm số, nhận xét |
+
+### 4. 📚 NHÓM WORKSHOP/HỌC TẬP (5 bảng)
+
+| Bảng | Chức năng | Dữ liệu chính |
+|------|-----------|---------------|
+| **`workshops`** | **Khóa học/workshop** | Tên khóa học, thời gian, giảng viên |
+| `user_workshops` | Đăng ký học | Ai đăng ký, trạng thái tham gia |
+| `workshop_registrations` | Đăng ký (cũ) | Thông tin đăng ký workshop |
+| `workshop_tags` | Nhãn workshop | Phân loại khóa học |
+| `lucky_draw_results` | Quay số may mắn | Giải thưởng trong workshop |
+
+---
+
+## Các bảng phụ trợ quan trọng
+
+### 🎯 Sự kiện và Kết nối (6 bảng)
+- `events`: Các sự kiện lớn (hội thảo, triển lãm việc làm)
+- `user_events`: Ai đăng ký tham gia sự kiện nào
+- `connect_events`: Sự kiện kết nối (phiên bản cũ)
+- `meetings`: Cuộc họp dự án
+- `posts`: Bài viết chia sẻ
+- `notifications`: Thông báo hệ thống
+
+### 💰 Hệ thống Ví và Tài khoản (6 bảng)
+- `es_wallets`: Ví điện tử lưu tiền
+- `es_wallet_transactions`: Lịch sử giao dịch
+- `user_roles`: Vai trò người dùng (admin, user, etc.)
+
+### 📖 Dữ liệu tham khảo (5 bảng)
+- `skills`: Danh sách kỹ năng có sẵn
+- `universities`: Các trường đại học
+- `majors`: Chuyên ngành học
+- `interests`: Sở thích
+- `tags`: Nhãn phân loại
+
+---
+
+## Luồng hoạt động đơn giản
+
+### 🔄 Quy trình chính:
+
+1. **Ứng viên đăng ký** → Tạo tài khoản trong `applicants`
+2. **Tạo hồ sơ** → Cập nhật `applicant_profiles`
+3. **Doanh nghiệp đăng tin** → Tạo `jobs` và `tasks`
+4. **Ứng viên ứng tuyển** → Tạo `job_applications`
+5. **Làm nhiệm vụ** → Cập nhật tiến độ `tasks`
+6. **Tham gia workshop** → Đăng ký `workshops`
+7. **Đánh giá** → Lưu kết quả trong `evaluations`
+
+### 💡 Ví dụ thực tế:
+
+**Nguyễn Văn A** (ứng viên):
+1. Đăng ký tài khoản → Lưu trong `applicants`
+2. Upload CV → Lưu link trong `applicant_profiles`
+3. Thêm kỹ năng "React JS" → Lưu trong `applicant_skills`
+4. Ứng tuyển vào **Công ty B** → Tạo record trong `job_applications`
+5. Được giao task "Làm website" → Tạo trong `tasks`
+6. Đăng ký workshop "Học Node.js" → Lưu trong `user_workshops`
+
+---
+
+## Điều cần biết cho từng nhóm người
+
+### 👨‍💼 Dành cho Quản lý/Business:
+- **4 module chính**: Applicants, Companies, Tasks, Workshops
+- **Số liệu theo dõi**: Có các trường `views_count`, `application_count`, `rating`
+- **Trạng thái**: Mọi thứ đều có `status` để theo dõi tiến độ
+
+### 👨‍💻 Dành cho Developer:
+- **Database**: PostgreSQL với 49 bảng
+- **Authentication**: Sử dụng Supabase Auth (`auth.users`)
+- **Data types**: Có array, enum, uuid, timestamp with timezone
+- **Relationships**: Chủ yếu là foreign key constraints
+
+### 👤 Dành cho End User:
+- **Tài khoản**: Một tài khoản có thể vừa là ứng viên, vừa là người tạo workshop
+- **Hồ sơ**: Có thể có nhiều kỹ năng, nhiều chuyên ngành
+- **Hoạt động**: Ứng tuyển job, làm task, tham gia workshop
+
+---
+
+## Tóm tắt quan trọng
+
+**DIA Talents = Hệ thống kết nối tài năng**
+
+- **49 bảng** chia thành 4 nhóm chính + các bảng phụ trợ
+- **Trung tâm**: Tasks là nơi ứng viên và doanh nghiệp tương tác
+- **Mục tiêu**: Tạo ecosystem cho việc tìm kiếm, đào tạo và phát triển nhân tài
+- **Công nghệ**: PostgreSQL + Supabase Auth
+
+**Câu hỏi thường gặp:**
+- **Q**: Làm sao biết ai là ứng viên, ai là công ty?
+- **A**: Xem bảng `user_roles` hoặc check có data trong `applicants` hay `companies`
+
+- **Q**: Task thuộc về ai?
+- **A**: Task có `created_by` (người tạo) và `assignee_id` (người thực hiện)
+
+- **Q**: Workshop khác gì với Events?
+- **A**: Workshop là khóa học có giảng viên, Events là sự kiện tổng quát
