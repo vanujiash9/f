@@ -60,7 +60,7 @@
 | company_contact | Thông tin liên hệ | Email HR, số điện thoại |
 | company_locations | Địa chỉ công ty | Trụ sở, chi nhánh |
 | company_timeline | Lịch sử công ty | Năm thành lập, số job đã đăng |
-| company_experience | Câu chuyện công ty | Bài viết về công ty |
+| company_experience | Kinh nghiệm và thành tựu | Năm kinh nghiệm, thành tựu đạt được |
 | jobs | Tin tuyển dụng | Vị trí, mức lương, yêu cầu |
 
 ### 3. NHÓM NHIỆM VỤ (7 bảng)
