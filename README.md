@@ -58,15 +58,24 @@ Database `dia_talents` là hệ thống quản lý tài năng với 4 module ch�
 | `workshop_tags` | Tags workshop | `tag_id`, `workshop_id` | `workshop_id` → `workshops`<br>`tag_id` → `tags` | - |
 | `lucky_draw_results` | Quay số may mắn | `lucky_draw_id` | `workshop_id` → `workshops`<br>`applicant_id` → `applicants` | `reward`, `draw_time` |
 
-### 5. Bảng Hỗ trợ và Events
+### 5. Bảng Events và Connect Events
 
 | Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
 |-----------|---------|-------------|--------------|------------|
-| `events` | Sự kiện | `event_id` | `created_by` → `auth.users.id` | `title`, `event_type`, `status`, `start_time` |
+| `events` | Sự kiện chính | `event_id` | `created_by` → `auth.users.id` | `title`, `event_type`, `status`, `start_time` |
 | `user_events` | Đăng ký sự kiện | `id` (uuid) | `user_id` → `auth.users.id`<br>`event_id` → `events` | `attendance_status`, `rating` |
+| `connect_events` | Sự kiện kết nối (legacy) | `event_id` | `organizer_id` → `users`<br>`employees_id` → `employees` | `event_name`, `format`, `event_date` |
+| `event_registrations` | Đăng ký connect events | `event_id`, `applicant_id` | `event_id` → `connect_events`<br>`applicant_id` → `applicants` | `session_start`, `reason` |
+| `event_staff` | Nhân viên sự kiện | `event_id`, `user_id` | `event_id` → `connect_events`<br>`user_id` → `users` | `role`, `assigned_at` |
+| `event_jobs` | Job trong sự kiện | `event_id`, `job_id` | `event_id` → `connect_events`<br>`job_id` → `jobs` | - |
+
+### 6. Bảng Meetings và Posts
+
+| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
+|-----------|---------|-------------|--------------|------------|
 | `meetings` | Cuộc họp | `meeting_id` | `project_id` → `projects` | `meeting_title`, `meeting_time` |
+| `meeting_attendees` | Người tham dự | `meeting_id`, `applicant_id` | `meeting_id` → `meetings`<br>`applicant_id` → `applicants` | `status` |
 | `posts` | Bài đăng | `post_id` | `company_id` → `companies`<br>`applicant_id` → `applicants` | `content`, `post_type`, `views_count` |
-| `notifications` | Thông báo | `id` (uuid) | - | `title`, `message`, `is_read`, `type` |
 
 ### 6. Reference Data (Dữ liệu tham chiếu)
 
@@ -86,6 +95,16 @@ Database `dia_talents` là hệ thống quản lý tài năng với 4 module ch�
 | `es_wallet_transactions` | Giao dịch ví | `id` (uuid) | `from_user_id`, `to_user_id` → `auth.users.id` | `amount`, `type`, `note` |
 | `user_roles` | Vai trò người dùng | `id` (uuid) | `user_id` → `auth.users.id` | `role` |
 | `users` | Người dùng (legacy) | `user_id` | - | `full_name`, `email` |
+| `employees` | Nhân viên (legacy) | `employees_id` | - | `role`, `assigned_id` |
+| `notifications` | Thông báo | `id` (uuid) | - | `title`, `message`, `is_read`, `type` |
+
+### 8. Bảng Utility và Storage
+
+| Tên Bảng | Vai trò | Primary Key | Foreign Keys | Key Fields |
+|-----------|---------|-------------|--------------|------------|
+| `kv_store_e9863467` | Key-value store | `key` | - | `value` (jsonb) |
+
+## Tổng kết: **49 bảng** trong database
 
 ## Mối quan hệ chính giữa 4 Module
 
