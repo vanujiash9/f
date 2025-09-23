@@ -1,8 +1,14 @@
 # DIA Talents Database Schema Documentation
 
+*Created by: Thanh Van*  
+*Facebook: https://www.facebook.com/gmail.com.vancutenemoinguoi196*  
+*Email: thanh.van19062004@gmail.com*
+
+---
+
 ## Tổng quan Database
 
-Database `dia_talents` là hệ thống quản lý tài năng và dự án, với 4 module chính: **Applicants**, **Companies**, **Tasks**, và **Workshops**. Ngoài ra còn có các bảng hỗ trợ và reference data.
+Database `dia_talents` là hệ thống quản lý tài năng với 4 module chính: **Applicants**, **Companies**, **Tasks**, và **Workshops**. Ứng viên và doanh nghiệp liên kết với nhau thông qua Tasks, ngoài ra có Workshops để đào tạo.
 
 ## Cấu trúc Database
 
@@ -84,18 +90,16 @@ Database `dia_talents` là hệ thống quản lý tài năng và dự án, vớ
 ## Mối quan hệ chính giữa 4 Module
 
 ```
-APPLICANTS ←→ COMPANIES
-    ↓            ↓
-    ↓         PROJECTS → TASKS
-    ↓            ↓
+APPLICANTS ←→ TASKS ←→ COMPANIES
+    ↓                    ↓
 WORKSHOPS ←→ EVENTS
 ```
 
 ### Luồng dữ liệu chính:
-1. **Applicants** ứng tuyển vào **Companies** thông qua `job_applications`
-2. **Companies** tạo **Projects**, **Projects** chứa **Tasks**
-3. **Applicants** tham gia **Projects** và được assign **Tasks**
-4. **Applicants** đăng ký **Workshops** và **Events** để học tập
+1. **Applicants** và **Companies** liên kết với nhau thông qua **Tasks** (nhiệm vụ)
+2. **Tasks** là điểm kết nối chính giữa ứng viên và doanh nghiệp
+3. **Applicants** tham gia **Workshops** để học tập và phát triển kỹ năng
+4. **Companies** có thể tạo **Tasks** để giao cho **Applicants** thực hiện
 
 ## Lưu ý quan trọng cho Frontend
 
